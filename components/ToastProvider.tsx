@@ -98,7 +98,7 @@ const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
     return (
         <div
             className={`
-                max-w-xl w-full bg-white shadow-2xl rounded-lg pointer-events-auto flex
+                w-96 bg-white shadow-2xl rounded-lg pointer-events-auto flex
                 transform transition-all duration-300 ease-in-out
                 ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}
             `}
