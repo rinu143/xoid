@@ -45,7 +45,7 @@ const ReviewForm: React.FC<ReviewFormProps> = ({ onSubmit }) => {
               rows={4}
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-black focus:ring-black sm:text-sm p-2 text-black"
+              className="block w-full rounded-md border-gray-300 bg-white shadow-sm focus:border-black focus:ring-0 focus:outline-none sm:text-sm p-2 text-black"
               placeholder="Share your thoughts on the product..."
             />
           </div>

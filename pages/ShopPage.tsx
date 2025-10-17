@@ -171,7 +171,7 @@ const ShopPage: React.FC = () => {
                   name="sort-by"
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="text-sm border-gray-300 rounded-md shadow-sm focus:ring-black focus:border-black"
+                  className="text-sm border-gray-300 rounded-md shadow-sm focus:ring-0 focus:outline-none focus:border-black"
               >
                   <option value="featured">Featured</option>
                   <option value="price-asc">Price: Low to High</option>

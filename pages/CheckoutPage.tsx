@@ -4,18 +4,74 @@ import { useNavigate } from 'react-router-dom';
 import { useCart } from '../App';
 import { useToast } from '../components/ToastProvider';
 
+const indianStates = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
+  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+  'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
+  'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+  'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands',
+  'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Lakshadweep',
+  'Delhi', 'Puducherry', 'Jammu and Kashmir', 'Ladakh'
+].sort();
+
+// A reusable component for the new floating label input fields
+const FloatingLabelInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string }> = ({ label, id, ...props }) => {
+  return (
+    <div className="relative">
+      <input
+        id={id}
+        placeholder=" "
+        className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer"
+        {...props}
+      />
+      <label
+        htmlFor={id}
+        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1 rtl:peer-focus:translate-x-1/4 rtl:peer-focus:left-auto"
+      >
+        {label}
+      </label>
+    </div>
+  );
+};
+
+// A reusable component for the new floating label select fields with custom styling
+const FloatingLabelSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement> & { label: string; children: React.ReactNode }> = ({ label, id, children, ...props }) => {
+  return (
+    <div className="relative group">
+      <select
+        id={id}
+        placeholder=" "
+        className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer pr-10"
+        {...props}
+      >
+        {children}
+      </select>
+       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500 transition-colors group-focus-within:text-black">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+      </div>
+       <label
+        htmlFor={id}
+        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1"
+      >
+        {label}
+      </label>
+    </div>
+  );
+};
+
+
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { cart, clearCart, removeFromCart } = useCart();
   const { addToast } = useToast();
   
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  // Placeholder for shipping, can be replaced with actual logic
   const shippingCost = subtotal > 0 ? 5.00 : 0; 
   const total = subtotal + shippingCost;
 
   useEffect(() => {
-    // If cart is empty on page load, redirect to the cart page
     if (cart.length === 0) {
       navigate('/cart');
     }
@@ -28,7 +84,6 @@ const CheckoutPage: React.FC = () => {
     navigate('/');
   };
   
-  // Render nothing while redirecting
   if (cart.length === 0) {
     return null;
   }
@@ -42,55 +97,88 @@ const CheckoutPage: React.FC = () => {
             <div>
               <h2 className="text-lg font-medium text-black">Contact information</h2>
               <div className="mt-4">
-                <label htmlFor="email-address" className="block text-sm font-medium text-gray-700">
-                  Email address
-                </label>
-                <div className="mt-1">
-                  <input
+                 <FloatingLabelInput
+                    label="Email address"
                     type="email"
                     id="email-address"
                     name="email-address"
                     autoComplete="email"
                     required
-                    className="block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2"
                   />
-                </div>
               </div>
             </div>
 
             <div>
               <h2 className="text-lg font-medium text-black">Shipping information</h2>
-              <div className="mt-4 grid grid-cols-1 gap-y-4 sm:grid-cols-2 sm:gap-x-4">
-                <div>
-                  <label htmlFor="first-name" className="block text-sm font-medium text-gray-700">First name</label>
-                  <input type="text" name="first-name" id="first-name" required className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2" />
+              <div className="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-6 sm:gap-x-4">
+                <div className="sm:col-span-6">
+                  <FloatingLabelSelect label="Country" id="country" name="country" autoComplete="country-name" required>
+                    <option>India</option>
+                  </FloatingLabelSelect>
                 </div>
-                <div>
-                  <label htmlFor="last-name" className="block text-sm font-medium text-gray-700">Last name</label>
-                  <input type="text" name="last-name" id="last-name" required className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2" />
-                </div>
-                <div className="sm:col-span-2">
-                  <label htmlFor="address" className="block text-sm font-medium text-gray-700">Address</label>
-                  <input type="text" name="address" id="address" required className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2" />
-                </div>
-              </div>
-            </div>
 
-            <div>
-              <h2 className="text-lg font-medium text-black">Payment details</h2>
-              <div className="mt-4 grid grid-cols-1 gap-y-4">
-                <div>
-                  <label htmlFor="card-number" className="block text-sm font-medium text-gray-700">Card number</label>
-                  <input type="text" id="card-number" name="card-number" required className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2" placeholder="0000 0000 0000 0000" />
+                <div className="sm:col-span-3">
+                  <FloatingLabelInput label="First name" type="text" name="first-name" id="first-name" autoComplete="given-name" required />
                 </div>
-                <div className="grid grid-cols-3 gap-x-4">
-                  <div>
-                    <label htmlFor="expiration-date" className="block text-sm font-medium text-gray-700">Expiration date (MM/YY)</label>
-                    <input type="text" name="expiration-date" id="expiration-date" required className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2" placeholder="MM / YY" />
-                  </div>
-                  <div>
-                    <label htmlFor="cvc" className="block text-sm font-medium text-gray-700">CVC</label>
-                    <input type="text" name="cvc" id="cvc" required className="mt-1 block w-full rounded-md border-gray-300 bg-gray-50 shadow-sm focus:border-black focus:ring-black sm:text-sm p-2" placeholder="CVC" />
+                
+                <div className="sm:col-span-3">
+                   <FloatingLabelInput label="Last name" type="text" name="last-name" id="last-name" autoComplete="family-name" required />
+                </div>
+                
+                <div className="sm:col-span-6">
+                  <FloatingLabelInput label="Address" type="text" name="address" id="address" autoComplete="street-address" required />
+                </div>
+                
+                <div className="sm:col-span-6">
+                   <FloatingLabelInput label="Apartment, suite, etc. (optional)" type="text" name="apartment" id="apartment" autoComplete="address-line2" />
+                </div>
+
+                <div className="sm:col-span-2">
+                   <FloatingLabelInput label="City" type="text" name="city" id="city" autoComplete="address-level2" required />
+                </div>
+                
+                <div className="sm:col-span-2">
+                    <FloatingLabelSelect label="State" id="state" name="state" autoComplete="address-level1" required>
+                       <option value="" disabled selected hidden></option>
+                       {indianStates.map(state => <option key={state} value={state}>{state}</option>)}
+                    </FloatingLabelSelect>
+                </div>
+                
+                <div className="sm:col-span-2">
+                    <FloatingLabelInput label="PIN code" type="text" name="postal-code" id="postal-code" autoComplete="postal-code" required pattern="[0-9]{6}" />
+                </div>
+
+                 <div className="sm:col-span-6">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 z-10 flex items-center">
+                      <select 
+                        id="country-code" 
+                        name="country-code" 
+                        className="h-full border-0 bg-transparent py-0 pl-3.5 pr-2 text-gray-500 focus:ring-0 focus:outline-none sm:text-sm"
+                        defaultValue="+91"
+                      >
+                        <option>+91</option>
+                        <option>+1</option>
+                        <option>+44</option>
+                        <option>+61</option>
+                      </select>
+                    </div>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      placeholder=" "
+                      className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer pl-[4.75rem]"
+                      autoComplete="tel"
+                      required
+                      pattern="\d{10,}"
+                    />
+                    <label
+                      htmlFor="phone"
+                      className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-[4.25rem]"
+                    >
+                      Phone number
+                    </label>
                   </div>
                 </div>
               </div>
@@ -99,19 +187,17 @@ const CheckoutPage: React.FC = () => {
             <div className="border-t border-gray-200 pt-6">
               <button
                 type="submit"
-                className="w-full rounded-md border border-transparent bg-black px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-gray-800"
+                className="w-full rounded-md border border-transparent bg-black px-6 py-4 text-base font-bold text-white shadow-sm hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
               >
-                Pay ${total.toFixed(2)}
+                Place Order
               </button>
             </div>
           </form>
         </main>
 
-        {/* Order summary */}
         <aside className="mt-16 lg:mt-0 lg:col-span-5">
            <div className="bg-gray-50 rounded-lg p-6 lg:sticky lg:top-24">
               <h2 className="text-lg font-medium text-black">Order summary</h2>
-
               <ul role="list" className="mt-6 divide-y divide-gray-200">
                 {cart.map((product) => (
                   <li key={product.cartItemId} className="flex py-6">
@@ -136,7 +222,7 @@ const CheckoutPage: React.FC = () => {
                            <button 
                               type="button" 
                               onClick={() => removeFromCart(product.cartItemId)}
-                              className="font-medium text-red-600 hover:text-black hover:underline"
+                              className="font-medium text-black hover:underline"
                             >
                              Remove
                            </button>
@@ -146,7 +232,6 @@ const CheckoutPage: React.FC = () => {
                   </li>
                 ))}
               </ul>
-              
               <dl className="mt-6 space-y-4 border-t border-gray-200 pt-6">
                 <div className="flex items-center justify-between">
                   <dt className="text-sm text-gray-600">Subtotal</dt>

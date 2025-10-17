@@ -38,7 +38,7 @@ const Checkbox: React.FC<{ id: string; label: string; checked: boolean; onChange
       type="checkbox"
       checked={checked}
       onChange={onChange}
-      className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"
+      className="h-4 w-4 rounded border-gray-300 text-black focus:ring-0 focus:outline-none"
     />
     <label htmlFor={id} className="ml-3 text-sm text-gray-700">
       {label}
@@ -87,7 +87,7 @@ const Filters: React.FC<FiltersProps> = ({ filters, onFilterChange, onClear, ava
                 value={range.value}
                 checked={filters.price === range.value}
                 onChange={(e) => onFilterChange({ price: e.target.value })}
-                className="h-4 w-4 border-gray-300 text-black focus:ring-black"
+                className="h-4 w-4 border-gray-300 text-black focus:ring-0 focus:outline-none"
               />
               <label htmlFor={`price-${range.value}`} className="ml-3 block text-sm font-medium text-gray-700">
                 {range.label}
