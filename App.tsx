@@ -14,6 +14,7 @@ import { ToastProvider, useToast } from './components/ToastProvider';
 import VirtualTryOnPage from './pages/VirtualTryOnPage';
 import AccountPage from './pages/AccountPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import BackToTopButton from './components/BackToTopButton';
 
 // Cart Context
 interface CartContextType {
@@ -181,6 +182,7 @@ const App: React.FC = () => {
                 </Routes>
               </main>
               <Footer />
+              <BackToTopButton />
             </div>
           </CartProvider>
         </AuthProvider>
