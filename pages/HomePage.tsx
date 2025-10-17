@@ -43,6 +43,14 @@ const HomePage: React.FC = () => {
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
+        <div className="mt-12 text-center">
+          <Link
+            to="/shop"
+            className="inline-block bg-white text-black border border-black font-bold py-3 px-10 rounded-md hover:bg-black hover:text-white transition-all duration-300"
+          >
+            View All
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -6,7 +6,7 @@ interface FiltersProps {
   onFilterChange: (newFilters: Partial<FiltersState>) => void;
   onClear: () => void;
   availableColors: string[];
-  availableMaterials: string[];
+  availableSizes: string[];
   isMobile?: boolean;
   onClose?: () => void;
 }
@@ -15,6 +15,7 @@ const colorMap: { [key: string]: string } = {
   Black: '#111827',
   White: '#ffffff',
   Cream: '#F3EFE9',
+  'Light Blue': '#A7D5E1'
 };
 
 const priceRanges = [
@@ -31,29 +32,22 @@ const FilterSection: React.FC<{ title: string; children: React.ReactNode }> = ({
   </div>
 );
 
-const Checkbox: React.FC<{ id: string; label: string; checked: boolean; onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; }> = ({ id, label, checked, onChange }) => (
-  <div className="flex items-center">
-    <input
-      id={id}
-      type="checkbox"
-      checked={checked}
-      onChange={onChange}
-      className="h-4 w-4 rounded border-gray-300 text-black focus:ring-0 focus:outline-none"
-    />
-    <label htmlFor={id} className="ml-3 text-sm text-gray-700">
-      {label}
-    </label>
-  </div>
-);
-
-const Filters: React.FC<FiltersProps> = ({ filters, onFilterChange, onClear, availableColors, availableMaterials, isMobile, onClose }) => {
+const Filters: React.FC<FiltersProps> = ({ filters, onFilterChange, onClear, availableColors, availableSizes, isMobile, onClose }) => {
   
-  const handleCheckboxChange = (category: 'colors' | 'materials', value: string) => {
-    const currentValues = filters[category];
+  const handleColorChange = (value: string) => {
+    const currentValues = filters.colors;
     const newValues = currentValues.includes(value)
       ? currentValues.filter(v => v !== value)
       : [...currentValues, value];
-    onFilterChange({ [category]: newValues });
+    onFilterChange({ colors: newValues });
+  };
+
+  const handleSizeChange = (value: string) => {
+    const currentValues = filters.sizes;
+    const newValues = currentValues.includes(value)
+      ? currentValues.filter(v => v !== value)
+      : [...currentValues, value];
+    onFilterChange({ sizes: newValues });
   };
 
   const handleClearAndClose = () => {
@@ -96,13 +90,33 @@ const Filters: React.FC<FiltersProps> = ({ filters, onFilterChange, onClear, ava
           ))}
         </FilterSection>
 
+        <FilterSection title="Size">
+            <div className="flex flex-wrap gap-3">
+              {availableSizes.map(size => (
+                <button
+                  key={size}
+                  type="button"
+                  onClick={() => handleSizeChange(size)}
+                  className={`px-4 py-2 rounded-md border text-sm font-medium transition-colors ${
+                    filters.sizes.includes(size)
+                      ? 'bg-black text-white border-black'
+                      : 'bg-white text-black border-gray-300 hover:bg-gray-100'
+                  }`}
+                  aria-pressed={filters.sizes.includes(size)}
+                >
+                  {size}
+                </button>
+              ))}
+            </div>
+        </FilterSection>
+
         <FilterSection title="Color">
             <div className="flex flex-wrap gap-3">
               {availableColors.map(color => (
                 <button
                   key={color}
                   type="button"
-                  onClick={() => handleCheckboxChange('colors', color)}
+                  onClick={() => handleColorChange(color)}
                   className={`w-8 h-8 rounded-full border border-gray-300 focus:outline-none transition-transform transform hover:scale-110 ${filters.colors.includes(color) ? 'ring-2 ring-offset-1 ring-black' : ''}`}
                   style={{ backgroundColor: colorMap[color] || '#ccc' }}
                   aria-label={`Filter by color ${color}`}
@@ -110,18 +124,6 @@ const Filters: React.FC<FiltersProps> = ({ filters, onFilterChange, onClear, ava
                 />
               ))}
             </div>
-        </FilterSection>
-
-        <FilterSection title="Material">
-          {availableMaterials.map(material => (
-            <Checkbox 
-                  key={material}
-                  id={`material-${material}`}
-                  label={material}
-                  checked={filters.materials.includes(material)}
-                  onChange={() => handleCheckboxChange('materials', material)}
-              />
-          ))}
         </FilterSection>
       </div>
       

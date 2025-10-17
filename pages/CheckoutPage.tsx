@@ -1,5 +1,3 @@
-
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../App';
@@ -42,12 +40,12 @@ const FloatingLabelSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement
       <select
         id={id}
         // FIX: Removed invalid 'placeholder' attribute from select element.
-        className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer pr-10"
+        className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer pr-10 transition-colors duration-200 hover:border-gray-400"
         {...props}
       >
         {children}
       </select>
-       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500 transition-colors group-focus-within:text-black">
+       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500 transition-colors duration-200 group-hover:text-black group-focus-within:text-black">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
             <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
           </svg>

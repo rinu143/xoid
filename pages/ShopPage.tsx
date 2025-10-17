@@ -4,11 +4,12 @@ import ProductCard from '../components/ProductCard';
 import Filters from '../components/Filters';
 import { Product } from '../types';
 import QuickViewModal from '../components/QuickViewModal';
+import CustomSelect from '../components/CustomSelect';
 
 export interface FiltersState {
   price: string;
   colors: string[];
-  materials: string[];
+  sizes: string[];
 }
 
 const priceRanges = [
@@ -22,14 +23,20 @@ const ShopPage: React.FC = () => {
   const [filters, setFilters] = useState<FiltersState>({
     price: '',
     colors: [],
-    materials: [],
+    sizes: [],
   });
   const [sortBy, setSortBy] = useState('featured');
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
   const availableColors = useMemo(() => Array.from(new Set(products.map(p => p.color))), []);
-  const availableMaterials = useMemo(() => Array.from(new Set(products.map(p => p.material))), []);
+  const availableSizes = useMemo(() => {
+    const allSizes = products.flatMap(p => p.sizes);
+    const uniqueSizes = Array.from(new Set(allSizes));
+    const sortOrder = ['S', 'M', 'L', 'XL'];
+    uniqueSizes.sort((a, b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
+    return uniqueSizes;
+  }, []);
 
   const sortedAndFilteredProducts = useMemo(() => {
     let productsToDisplay = products.filter(product => {
@@ -44,9 +51,11 @@ const ShopPage: React.FC = () => {
       if (filters.colors.length > 0 && !filters.colors.includes(product.color)) {
         return false;
       }
-      // Material filter
-      if (filters.materials.length > 0 && !filters.materials.includes(product.material)) {
-        return false;
+      // Size filter
+      if (filters.sizes.length > 0) {
+        if (!filters.sizes.some(size => product.sizes.includes(size))) {
+          return false;
+        }
       }
       return true;
     });
@@ -73,7 +82,7 @@ const ShopPage: React.FC = () => {
   };
   
   const handleClearFilters = () => {
-    setFilters({ price: '', colors: [], materials: [] });
+    setFilters({ price: '', colors: [], sizes: [] });
   };
 
   const removeFilter = (type: keyof FiltersState, value: string) => {
@@ -88,7 +97,7 @@ const ShopPage: React.FC = () => {
 
   const activeFiltersForDisplay = [
     ...filters.colors.map(c => ({ type: 'colors' as keyof FiltersState, value: c, label: c })),
-    ...filters.materials.map(m => ({ type: 'materials' as keyof FiltersState, value: m, label: m })),
+    ...filters.sizes.map(s => ({ type: 'sizes' as keyof FiltersState, value: s, label: `Size: ${s}`})),
     ...(filters.price ? [{ type: 'price' as keyof FiltersState, value: filters.price, label: priceRanges.find(p => p.value === filters.price)?.label || '' }] : [])
   ].filter(f => f.label);
 
@@ -133,7 +142,7 @@ const ShopPage: React.FC = () => {
                 onFilterChange={handleFilterChange}
                 onClear={handleClearFilters}
                 availableColors={availableColors}
-                availableMaterials={availableMaterials}
+                availableSizes={availableSizes}
                 isMobile={true} 
                 onClose={() => setIsFilterPanelOpen(false)}
             />
@@ -147,7 +156,7 @@ const ShopPage: React.FC = () => {
             onFilterChange={handleFilterChange}
             onClear={handleClearFilters}
             availableColors={availableColors}
-            availableMaterials={availableMaterials}
+            availableSizes={availableSizes}
           />
         </aside>
 
@@ -165,18 +174,17 @@ const ShopPage: React.FC = () => {
             </button>
             <p className="hidden lg:block text-sm text-gray-600">{sortedAndFilteredProducts.length} Products</p>
             <div>
-              <label htmlFor="sort-by" className="sr-only">Sort by</label>
-              <select 
-                  id="sort-by" 
-                  name="sort-by"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="text-sm border-gray-300 rounded-md shadow-sm focus:ring-0 focus:outline-none focus:border-black"
+              <CustomSelect
+                label="Sort by"
+                id="sort-by"
+                name="sort-by"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
               >
-                  <option value="featured">Featured</option>
-                  <option value="price-asc">Price: Low to High</option>
-                  <option value="price-desc">Price: High to Low</option>
-              </select>
+                <option value="featured">Featured</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+              </CustomSelect>
             </div>
           </div>
           
