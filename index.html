@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>XOID - Luxury Oversized Apparel</title>
+    <meta name="description" content="Discover the exclusive collection of oversized t-shirts from XOID. Premium quality, modern design, and a unique virtual try-on experience." />
+    <meta name="keywords" content="XOID, oversized t-shirt, luxury apparel, designer, streetwear, virtual try-on" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Inter', sans-serif;
+      }
+
+      .shiny-text {
+        background: linear-gradient(90deg, #000000 40%, #ffffff 50%, #000000 60%);
+        background-size: 200% 100%;
+        -webkit-background-clip: text;
+        -moz-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: shine-text-anim 5s linear infinite;
+        animation-delay: 2s;
+      }
+
+      @keyframes shine-text-anim {
+        0% {
+          background-position: 150% 0;
+        }
+        100% {
+          background-position: -150% 0;
+        }
+      }
+      
+      .ai-star {
+        animation: ai-star-burst 2s ease-in-out infinite;
+        animation-delay: .5s;
+        transform-origin: center;
+        display: inline-block; /* Ensures transform-origin works correctly */
+      }
+
+      @keyframes ai-star-burst {
+        0%, 25%, 100% {
+          transform: scale(0) rotate(0deg);
+          opacity: 0;
+        }
+        5% {
+          transform: scale(1.4) rotate(15deg);
+          opacity: 1;
+        }
+        10% {
+          transform: scale(1) rotate(-10deg);
+          opacity: 1;
+        }
+        15% {
+          transform: scale(1.2) rotate(5deg);
+          opacity: 1;
+        }
+        20% {
+          transform: scale(1) rotate(0deg);
+          opacity: 1;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.4",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.24.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+</head>
+  <body class="bg-white text-gray-800">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

@@ -1,0 +1,56 @@
+import { Product } from '../types';
+
+export const products: Product[] = [
+  {
+    id: 1,
+    name: 'Void Echo Tee',
+    price: 120,
+    imageUrls: ['https://saberandsacrifice.com/cdn/shop/files/230316E4-3528-4A0B-87D3-0A3FF8DAF663_1310x_crop_center.jpg?v=1754823242', 'https://saberandsacrifice.com/cdn/shop/files/BA930C2B-C617-4562-8960-CCE6267126BF_960x_crop_center.jpg?v=1754825144', 'https://saberandsacrifice.com/cdn/shop/files/B68C17EE-1194-4798-89C8-98DE5F48B7F2_960x_crop_center.jpg?v=1754824412'],
+    tshirtOnlyImageUrl: 'https://i.imgur.com/example-tshirt1.png', // Placeholder transparent PNG
+    description: 'Crafted from ultra-soft, heavyweight cotton, the Void Echo Tee features a subtle, tone-on-tone embroidered logo. Its relaxed, oversized silhouette drapes perfectly for a modern, minimalist statement.',
+    aiPromptDescription: 'a black oversized t-shirt with a small, subtle, black embroidered abstract logo on the left chest.',
+    color: 'Cream',
+    material: 'Heavyweight Cotton',
+    stock: 15,
+    sizes: ['S', 'M', 'L', 'XL'],
+  },
+  {
+    id: 2,
+    name: 'Chrome Fragment Tee',
+    price: 155,
+    imageUrls: ['https://hinlers.com/cdn/shop/files/0CB179FB-4500-4963-9725-6F454C01432C.jpg?v=1757419647&width=1066', 'https://hinlers.com/cdn/shop/files/A5BC6593-C625-4248-958B-B4E30C7181DB.jpg?v=1757419648&width=1066'],
+    tshirtOnlyImageUrl: 'https://i.imgur.com/example-tshirt2.png', // Placeholder transparent PNG
+    description: 'The Chrome Fragment Tee showcases a shattered metallic graphic print on a pristine white base. Made with 280gsm Portuguese cotton for a structured yet comfortable feel.',
+    aiPromptDescription: 'a white oversized t-shirt with a fractured, chrome-like geometric graphic print across the chest.',
+    color: 'White',
+    material: 'Portuguese Cotton',
+    stock: 0,
+    sizes: ['S', 'M', 'L', 'XL'],
+  },
+  {
+    id: 3,
+    name: 'Noir Canvas Tee',
+    price: 110,
+    imageUrls: ['https://saberandsacrifice.com/cdn/shop/files/DSC07796_b3ef0d9d-f6fe-4e83-8556-d7d7608e37b0_1310x_crop_center.jpg?v=1723279071', 'https://saberandsacrifice.com/cdn/shop/files/DSC07811_72332d8c-9c8b-4cc0-9c81-ff8e4d8b2226_1310x_crop_center.jpg?v=1723279071', 'https://saberandsacrifice.com/cdn/shop/files/DSC07832_ef06b804-da03-428a-a1d1-81aeeb77d675_168x_crop_center.jpg?v=1723279071'],
+    tshirtOnlyImageUrl: 'https://i.imgur.com/example-tshirt3.png', // Placeholder transparent PNG
+    description: 'The quintessential oversized black tee. The Noir Canvas is your go-to for understated luxury. Its premium fabric and flawless construction speak for themselves.',
+    aiPromptDescription: 'a plain, solid black oversized t-shirt with no graphics or logos. It should look like it is made from high-quality, heavy cotton.',
+    color: 'Black',
+    material: 'Premium Cotton',
+    stock: 5,
+    sizes: ['S', 'M', 'L', 'XL'],
+  },
+  {
+    id: 4,
+    name: 'Ivory Script Tee',
+    price: 135,
+    imageUrls: ['https://hinlers.com/cdn/shop/files/CCAB8C39-8F2C-4523-893D-DD2095606D2E.jpg?v=1757515785', 'https://hinlers.com/cdn/shop/files/67E774E4-5526-4198-8771-9D2A24862162.jpg?v=1757516393'],
+    tshirtOnlyImageUrl: 'https://i.imgur.com/example-tshirt4.png', // Placeholder transparent PNG
+    description: 'An off-white tee featuring the "XOID" brand name in an elegant, flowing script across the back. The front is kept clean for a balanced, sophisticated look.',
+    aiPromptDescription: 'a cream or off-white oversized t-shirt. The front is plain, and the back has the word "XOID" written in a stylish, minimalist script font.',
+    color: 'Light Blue',
+    material: 'Organic Cotton',
+    stock: 22,
+    sizes: ['S', 'M', 'L', 'XL'],
+  },
+];
