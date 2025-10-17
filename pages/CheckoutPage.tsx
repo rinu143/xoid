@@ -1,4 +1,5 @@
 
+
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../App';
@@ -40,7 +41,7 @@ const FloatingLabelSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement
     <div className="relative group">
       <select
         id={id}
-        placeholder=" "
+        // FIX: Removed invalid 'placeholder' attribute from select element.
         className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer pr-10"
         {...props}
       >
@@ -53,7 +54,8 @@ const FloatingLabelSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement
       </div>
        <label
         htmlFor={id}
-        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1"
+        // FIX: Replaced 'peer-placeholder-shown' with 'peer-invalid' to correctly handle floating label for required select elements.
+        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-invalid:scale-100 peer-invalid:-translate-y-1/2 peer-invalid:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1"
       >
         {label}
       </label>

@@ -169,7 +169,14 @@ const App: React.FC = () => {
                   <Route path="/virtual-try-on" element={<VirtualTryOnPage />} />
                   <Route path="/virtual-try-on/:id" element={<VirtualTryOnPage />} />
                   <Route path="/cart" element={<CartPage />} />
-                  <Route path="/checkout" element={<CheckoutPage />} />
+                  <Route 
+                    path="/checkout"
+                    element={
+                      <ProtectedRoute>
+                        <CheckoutPage />
+                      </ProtectedRoute>
+                    }
+                  />
                   <Route path="/login" element={<LoginPage />} />
                   <Route 
                     path="/account" 

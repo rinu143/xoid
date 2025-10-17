@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../components/ToastProvider';
 import { useAuth } from '../App';
 
@@ -49,9 +49,12 @@ const LoginPage: React.FC = () => {
   const { addToast } = useToast();
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   
   const nameFieldRef = useRef<HTMLDivElement>(null);
   const [nameFieldHeight, setNameFieldHeight] = useState(0);
+
+  const from = location.state?.from?.pathname || '/account';
 
   useEffect(() => {
     if (nameFieldRef.current) {
@@ -95,7 +98,7 @@ const LoginPage: React.FC = () => {
         const success = login(email, password);
         if (success) {
           addToast('Signed in successfully!', 'success');
-          navigate('/account');
+          navigate(from, { replace: true });
         } else {
           setLoginError('Invalid email or password. Please try again.');
         }
