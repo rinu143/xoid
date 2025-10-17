@@ -38,6 +38,13 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
 
+  const colorMap: { [key: string]: string } = {
+    'Black': '#111827',
+    'White': '#ffffff',
+    'Cream': '#F3EFE9',
+    'Light Blue': '#A7D5E1'
+  };
+
 
   useEffect(() => {
     if (product) {
@@ -193,10 +200,13 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
           </div>
 
            <div className="mt-6 border-t border-gray-200 pt-6">
-             <h3 className="text-sm font-medium text-black">Details</h3>
-             <div className="mt-2 flex flex-col text-sm text-gray-600 space-y-1">
-                 <span>Color: {product.color}</span>
-                 <span>Material: {product.material}</span>
+             <h3 className="text-sm font-medium text-black">Color</h3>
+             <div className="mt-2">
+                <span
+                    className="h-8 w-8 rounded-full border-2 border-black block"
+                    style={{ backgroundColor: colorMap[product.color] || product.color.toLowerCase() }}
+                    title={product.color}
+                ></span>
              </div>
            </div>
 
