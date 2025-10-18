@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../App';
 import { useToast } from '../components/ToastProvider';
+import { useAuth } from '../App';
+import { Address } from '../types';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
@@ -39,7 +41,6 @@ const FloatingLabelSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement
     <div className="relative group">
       <select
         id={id}
-        // FIX: Removed invalid 'placeholder' attribute from select element.
         className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer pr-10 transition-colors duration-200 hover:border-gray-400"
         {...props}
       >
@@ -52,8 +53,7 @@ const FloatingLabelSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement
       </div>
        <label
         htmlFor={id}
-        // FIX: Replaced 'peer-placeholder-shown' with 'peer-invalid' to correctly handle floating label for required select elements.
-        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-invalid:scale-100 peer-invalid:-translate-y-1/2 peer-invalid:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1"
+        className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-[&:not([value=''])]:scale-75 peer-[&:not([value=''])]:text-gray-500 peer-[&:not([value=''])]:bg-white peer-[&:not([value=''])]:px-2 peer-[&:not([value=''])]:top-2 peer-[&:not([value=''])]:z-10 peer-[&:not([value=''])]:origin-[0] peer-[&:not([value=''])]:-translate-y-4 start-1 peer-focus:scale-75 peer-focus:top-2 peer-focus:-translate-y-4"
       >
         {label}
       </label>
@@ -61,12 +61,49 @@ const FloatingLabelSelect: React.FC<React.SelectHTMLAttributes<HTMLSelectElement
   );
 };
 
+const AddressCard: React.FC<{ address: Address, isSelected: boolean, onSelect: () => void }> = ({ address, isSelected, onSelect }) => (
+    <div 
+        onClick={onSelect}
+        className={`p-4 rounded-lg border-2 cursor-pointer transition-all duration-200 ${isSelected ? 'border-black bg-gray-50 shadow-md' : 'border-gray-300 bg-white hover:border-gray-400'}`}
+    >
+        <div className="flex justify-between items-start">
+            <p className="font-bold text-black">{address.firstName} {address.lastName}</p>
+            {address.isDefault && <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">Default</span>}
+        </div>
+        <div className="mt-2 text-sm text-gray-600">
+            <p>{address.addressLine1}</p>
+            {address.addressLine2 && <p>{address.addressLine2}</p>}
+            <p>{address.city}, {address.state} {address.postalCode}</p>
+            <p>{address.country}</p>
+            <p className="mt-1">{address.phone}</p>
+        </div>
+    </div>
+);
+
 
 const CheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const { cart, clearCart, removeFromCart } = useCart();
   const { addToast } = useToast();
+  const { user, addAddress } = useAuth();
   
+  const hasAddresses = user && user.addresses.length > 0;
+
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [saveAddress, setSaveAddress] = useState(true);
+  const [formState, setFormState] = useState({
+      email: user?.email || '',
+      country: 'India',
+      firstName: '',
+      lastName: '',
+      address: '',
+      apartment: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      phone: ''
+  });
+
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const shippingCost = subtotal > 0 ? 5.00 : 0; 
   const total = subtotal + shippingCost;
@@ -77,8 +114,45 @@ const CheckoutPage: React.FC = () => {
     }
   }, [cart, navigate]);
   
+  useEffect(() => {
+    if (hasAddresses) {
+        const defaultAddress = user.addresses.find(a => a.isDefault);
+        setSelectedAddressId(defaultAddress ? defaultAddress.id : user.addresses[0].id);
+    }
+  }, [hasAddresses, user?.addresses]);
+
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormState(prev => ({ ...prev, [name]: value }));
+  };
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (hasAddresses && !selectedAddressId) {
+        addToast('Please select a shipping address.', 'error');
+        return;
+    }
+
+    if (!hasAddresses) {
+        // Here you would typically add form validation
+        if (saveAddress) {
+            addAddress({
+                firstName: formState.firstName,
+                lastName: formState.lastName,
+                addressLine1: formState.address,
+                addressLine2: formState.apartment,
+                city: formState.city,
+                state: formState.state,
+                postalCode: formState.postalCode,
+                country: formState.country,
+                phone: formState.phone,
+                isDefault: true // The first address saved is made the default
+            });
+        }
+    }
+
     addToast("Thank you for your order! (This is a demo)");
     clearCart();
     navigate('/');
@@ -87,7 +161,7 @@ const CheckoutPage: React.FC = () => {
   if (cart.length === 0) {
     return null;
   }
-
+  
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-extrabold text-black sm:text-4xl mb-8 lg:mb-12">Checkout</h1>
@@ -101,8 +175,10 @@ const CheckoutPage: React.FC = () => {
                     label="Email address"
                     type="email"
                     id="email-address"
-                    name="email-address"
+                    name="email"
                     autoComplete="email"
+                    value={formState.email}
+                    onChange={handleInputChange}
                     required
                   />
               </div>
@@ -110,77 +186,87 @@ const CheckoutPage: React.FC = () => {
 
             <div>
               <h2 className="text-lg font-medium text-black">Shipping information</h2>
-              <div className="mt-4 grid grid-cols-1 gap-y-6 sm:grid-cols-6 sm:gap-x-4">
-                <div className="sm:col-span-6">
-                  <FloatingLabelSelect label="Country" id="country" name="country" autoComplete="country-name" required>
-                    <option>India</option>
-                  </FloatingLabelSelect>
-                </div>
-
-                <div className="sm:col-span-3">
-                  <FloatingLabelInput label="First name" type="text" name="first-name" id="first-name" autoComplete="given-name" required />
-                </div>
-                
-                <div className="sm:col-span-3">
-                   <FloatingLabelInput label="Last name" type="text" name="last-name" id="last-name" autoComplete="family-name" required />
-                </div>
-                
-                <div className="sm:col-span-6">
-                  <FloatingLabelInput label="Address" type="text" name="address" id="address" autoComplete="street-address" required />
-                </div>
-                
-                <div className="sm:col-span-6">
-                   <FloatingLabelInput label="Apartment, suite, etc. (optional)" type="text" name="apartment" id="apartment" autoComplete="address-line2" />
-                </div>
-
-                <div className="sm:col-span-2">
-                   <FloatingLabelInput label="City" type="text" name="city" id="city" autoComplete="address-level2" required />
-                </div>
-                
-                <div className="sm:col-span-2">
-                    <FloatingLabelSelect label="State" id="state" name="state" autoComplete="address-level1" required>
-                       <option value="" disabled selected hidden></option>
-                       {indianStates.map(state => <option key={state} value={state}>{state}</option>)}
-                    </FloatingLabelSelect>
-                </div>
-                
-                <div className="sm:col-span-2">
-                    <FloatingLabelInput label="PIN code" type="text" name="postal-code" id="postal-code" autoComplete="postal-code" required pattern="[0-9]{6}" />
-                </div>
-
-                 <div className="sm:col-span-6">
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 z-10 flex items-center">
-                      <select 
-                        id="country-code" 
-                        name="country-code" 
-                        className="h-full border-0 bg-transparent py-0 pl-3.5 pr-2 text-gray-500 focus:ring-0 focus:outline-none sm:text-sm"
-                        defaultValue="+91"
-                      >
-                        <option>+91</option>
-                        <option>+1</option>
-                        <option>+44</option>
-                        <option>+61</option>
-                      </select>
+              
+              <div className="mt-6">
+                {hasAddresses ? (
+                    <div className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {user.addresses.map(addr => (
+                                <AddressCard 
+                                    key={addr.id}
+                                    address={addr}
+                                    isSelected={selectedAddressId === addr.id}
+                                    onSelect={() => setSelectedAddressId(addr.id)}
+                                />
+                            ))}
+                        </div>
+                        <p className="text-sm text-gray-600 pt-2">
+                            Need to make a change?{' '}
+                            <Link to="/account" className="font-medium text-black hover:underline">
+                                Manage your addresses
+                            </Link>
+                        </p>
                     </div>
-                    <input
-                      type="tel"
-                      id="phone"
-                      name="phone"
-                      placeholder=" "
-                      className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer pl-[4.75rem]"
-                      autoComplete="tel"
-                      required
-                      pattern="\d{10,}"
-                    />
-                    <label
-                      htmlFor="phone"
-                      className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-[4.25rem]"
-                    >
-                      Phone number
-                    </label>
-                  </div>
-                </div>
+                ) : (
+                    <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-6 sm:gap-x-4">
+                        <div className="sm:col-span-6">
+                          <FloatingLabelSelect label="Country" id="country" name="country" autoComplete="country-name" value={formState.country} onChange={handleInputChange} required>
+                            <option>India</option>
+                          </FloatingLabelSelect>
+                        </div>
+
+                        <div className="sm:col-span-3">
+                          <FloatingLabelInput label="First name" type="text" name="firstName" id="first-name" autoComplete="given-name" value={formState.firstName} onChange={handleInputChange} required />
+                        </div>
+                        
+                        <div className="sm:col-span-3">
+                           <FloatingLabelInput label="Last name" type="text" name="lastName" id="last-name" autoComplete="family-name" value={formState.lastName} onChange={handleInputChange} required />
+                        </div>
+                        
+                        <div className="sm:col-span-6">
+                          <FloatingLabelInput label="Address" type="text" name="address" id="address" autoComplete="street-address" value={formState.address} onChange={handleInputChange} required />
+                        </div>
+                        
+                        <div className="sm:col-span-6">
+                           <FloatingLabelInput label="Apartment, suite, etc. (optional)" type="text" name="apartment" id="apartment" autoComplete="address-line2" value={formState.apartment} onChange={handleInputChange} />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                           <FloatingLabelInput label="City" type="text" name="city" id="city" autoComplete="address-level2" value={formState.city} onChange={handleInputChange} required />
+                        </div>
+                        
+                        <div className="sm:col-span-2">
+                            <FloatingLabelSelect label="State" id="state" name="state" autoComplete="address-level1" value={formState.state} onChange={handleInputChange} required>
+                               <option value="" disabled></option>
+                               {indianStates.map(state => <option key={state} value={state}>{state}</option>)}
+                            </FloatingLabelSelect>
+                        </div>
+                        
+                        <div className="sm:col-span-2">
+                            <FloatingLabelInput label="PIN code" type="text" name="postalCode" id="postal-code" autoComplete="postal-code" required pattern="[0-9]{6}" value={formState.postalCode} onChange={handleInputChange} />
+                        </div>
+
+                         <div className="sm:col-span-6">
+                            <FloatingLabelInput label="Phone number" type="tel" name="phone" id="phone" autoComplete="tel" required pattern="\d{10,}" value={formState.phone} onChange={handleInputChange} />
+                        </div>
+
+                        <div className="sm:col-span-6">
+                            <div className="flex items-center">
+                                <input
+                                    id="save-address"
+                                    name="save-address"
+                                    type="checkbox"
+                                    checked={saveAddress}
+                                    onChange={(e) => setSaveAddress(e.target.checked)}
+                                    className="h-4 w-4 text-black border-gray-300 rounded focus:ring-black"
+                                />
+                                <label htmlFor="save-address" className="ml-2 block text-sm text-gray-700">
+                                    Save this information for next time
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                )}
               </div>
             </div>
             

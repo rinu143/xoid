@@ -1,6 +1,6 @@
 import React, { useState, createContext, useContext, useCallback } from 'react';
 import { HashRouter, Routes, Route, Link, useParams } from 'react-router-dom';
-import { CartItem, Product } from './types';
+import { CartItem, Product, Address } from './types';
 import { products } from './data/products';
 import HomePage from './pages/HomePage';
 import ShopPage from './pages/ShopPage';
@@ -36,12 +36,26 @@ export const useCart = () => {
 };
 
 // Auth Context
+interface User {
+    name: string;
+    email: string;
+    password?: string;
+    addresses: Address[];
+}
+
 interface AuthContextType {
   isLoggedIn: boolean;
-  user: { name: string; email: string } | null;
+  user: User | null;
   login: (email: string, password: string) => boolean;
   logout: () => void;
+  updateUser: (details: { name?: string; email?: string }) => void;
+  changePassword: (currentPassword: string, newPassword: string) => boolean;
+  addAddress: (address: Omit<Address, 'id'>) => void;
+  updateAddress: (address: Address) => void;
+  deleteAddress: (addressId: string) => void;
+  setDefaultAddress: (addressId: string) => void;
 }
+
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -55,13 +69,13 @@ export const useAuth = () => {
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const login = (email: string, password: string): boolean => {
     // Mock credentials
     if (email.toLowerCase() === 'admin@gmail.com' && password === 'admin123') {
       setIsLoggedIn(true);
-      setUser({ name: 'John Doe', email: 'admin@gmail.com' });
+      setUser({ name: 'John Doe', email: 'admin@gmail.com', password: 'admin123', addresses: [] });
       return true;
     }
     return false;
@@ -72,7 +86,79 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     setUser(null);
   };
   
-  const value = { isLoggedIn, user, login, logout };
+  const updateUser = (details: { name?: string; email?: string }) => {
+    if (user) {
+      setUser(prevUser => ({ ...prevUser!, ...details }));
+    }
+  };
+
+  const changePassword = (currentPassword: string, newPassword: string): boolean => {
+    if (user && user.password === currentPassword) {
+        setUser(prevUser => ({ ...prevUser!, password: newPassword }));
+        return true;
+    }
+    return false;
+  };
+  
+  const addAddress = (address: Omit<Address, 'id'>) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      const newAddress: Address = { ...address, id: Date.now().toString() };
+      let newAddresses = [...prevUser.addresses, newAddress];
+      // If the new address is set as default, unset the old default
+      if (newAddress.isDefault) {
+        newAddresses = newAddresses.map(a => 
+          a.id === newAddress.id ? a : { ...a, isDefault: false }
+        );
+      } else if (newAddresses.length === 1) {
+        // If it's the first address, make it default
+        newAddresses[0].isDefault = true;
+      }
+      return { ...prevUser, addresses: newAddresses };
+    });
+  };
+
+  const updateAddress = (updatedAddress: Address) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      let newAddresses = prevUser.addresses.map(a => 
+        a.id === updatedAddress.id ? updatedAddress : a
+      );
+      // If the updated address is set as default, unset the old default
+      if (updatedAddress.isDefault) {
+        newAddresses = newAddresses.map(a => 
+          a.id === updatedAddress.id ? a : { ...a, isDefault: false }
+        );
+      }
+      return { ...prevUser, addresses: newAddresses };
+    });
+  };
+
+  const deleteAddress = (addressId: string) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      let remainingAddresses = prevUser.addresses.filter(a => a.id !== addressId);
+      const wasDefault = prevUser.addresses.find(a => a.id === addressId)?.isDefault;
+      // If the deleted address was the default and there are others left, make the first one the new default
+      if (wasDefault && remainingAddresses.length > 0) {
+        remainingAddresses[0] = { ...remainingAddresses[0], isDefault: true };
+      }
+      return { ...prevUser, addresses: remainingAddresses };
+    });
+  };
+
+  const setDefaultAddress = (addressId: string) => {
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      const newAddresses = prevUser.addresses.map(a => ({
+        ...a,
+        isDefault: a.id === addressId
+      }));
+      return { ...prevUser, addresses: newAddresses };
+    });
+  };
+
+  const value = { isLoggedIn, user, login, logout, updateUser, changePassword, addAddress, updateAddress, deleteAddress, setDefaultAddress };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

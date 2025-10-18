@@ -1,11 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
+import { useToast } from '../components/ToastProvider';
+import { Address } from '../types';
 
 const mockOrders = [
   { id: 'Z01D-78923', date: 'July 25, 2024', total: '$275.00', status: 'Shipped', items: ['Void Echo Tee', 'Chrome Fragment Tee'] },
   { id: 'Z01D-54198', date: 'June 12, 2024', total: '$120.00', status: 'Delivered', items: ['Noir Canvas Tee'] },
 ];
+
+const indianStates = [
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
+  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+  'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland',
+  'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
+  'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman and Nicobar Islands',
+  'Chandigarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Lakshadweep',
+  'Delhi', 'Puducherry', 'Jammu and Kashmir', 'Ladakh'
+].sort();
+
 
 // --- SVG Icons for Navigation ---
 const icons: { [key: string]: React.ReactNode } = {
@@ -43,6 +56,17 @@ const NavItem: React.FC<{
         {icon}
         <span>{label}</span>
     </button>
+);
+
+const Modal: React.FC<{ children: React.ReactNode, onClose: () => void }> = ({ children, onClose }) => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="relative bg-white rounded-xl shadow-2xl p-8 w-full max-w-md m-4" onClick={(e) => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close">
+            <svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+        {children}
+      </div>
+    </div>
 );
 
 
@@ -151,17 +175,364 @@ const OrderHistoryView: React.FC = () => (
     </div>
 );
 
-const PlaceholderView: React.FC<{title: string}> = ({ title }) => (
-    <div className="bg-white rounded-xl border border-gray-200/80 shadow-sm">
-        <div className="border-b border-gray-200/80 px-6 py-5">
-            <h2 className="text-xl font-bold text-black">{title}</h2>
+const ProfileSettingsView: React.FC = () => {
+    const { user, updateUser, changePassword } = useAuth();
+    const { addToast } = useToast();
+    
+    // State for modals
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+    const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+    
+    // State for profile editing
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({ name: user?.name || '', email: user?.email || '' });
+    
+    // State for password change
+    const [passwordData, setPasswordData] = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    const [passwordError, setPasswordError] = useState('');
+
+    // State for OTP
+    const [otp, setOtp] = useState('');
+    const [otpError, setOtpError] = useState('');
+    const MOCK_OTP = '123456';
+
+    React.useEffect(() => {
+        if (user) {
+            setFormData({ name: user.name, email: user.email });
+        }
+    }, [user]);
+
+    if (!user) return null;
+
+    // --- Profile Edit Handlers ---
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleEdit = () => {
+        setFormData({ name: user.name, email: user.email });
+        setIsEditing(true);
+    };
+
+    const handleCancel = () => {
+        setIsEditing(false);
+        setFormData({ name: user.name, email: user.email });
+    };
+
+    const handleSave = () => {
+        if (!formData.name.trim() || !formData.email.trim()) {
+            addToast('Name and email cannot be empty.', 'error');
+            return;
+        }
+        
+        const isEmailChanged = formData.email.toLowerCase() !== user.email.toLowerCase();
+
+        if (isEmailChanged) {
+            addToast(`OTP sent to ${formData.email}: ${MOCK_OTP}`, 'info');
+            setIsOtpModalOpen(true);
+        } else { // Only name is changed
+            updateUser({ name: formData.name });
+            addToast('Profile updated successfully!', 'success');
+            setIsEditing(false);
+        }
+    };
+
+    // --- OTP Handlers ---
+    const handleOtpSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (otp === MOCK_OTP) {
+            updateUser(formData);
+            addToast('Profile updated successfully!', 'success');
+            setIsOtpModalOpen(false);
+            setIsEditing(false);
+            setOtp('');
+            setOtpError('');
+        } else {
+            setOtpError('Invalid OTP. Please try again.');
+        }
+    };
+    
+    // --- Password Change Handlers ---
+    const handlePasswordInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setPasswordData(prev => ({ ...prev, [name]: value }));
+        setPasswordError('');
+    };
+    
+    const handlePasswordSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        const { currentPassword, newPassword, confirmPassword } = passwordData;
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            setPasswordError('All fields are required.');
+            return;
+        }
+        if (newPassword !== confirmPassword) {
+            setPasswordError('New passwords do not match.');
+            return;
+        }
+        
+        const success = changePassword(currentPassword, newPassword);
+        if (success) {
+            addToast('Password changed successfully!', 'success');
+            setIsPasswordModalOpen(false);
+            setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        } else {
+            setPasswordError('Incorrect current password.');
+        }
+    };
+
+    return (
+    <>
+        <div className="bg-white rounded-xl border border-gray-200/80 shadow-sm">
+            <div className="border-b border-gray-200/80 px-6 py-5 flex justify-between items-center flex-wrap gap-4">
+                <div>
+                    <h2 className="text-xl font-bold text-black">Profile Settings</h2>
+                    <p className="text-sm text-gray-500 mt-1">Manage your account details.</p>
+                </div>
+                {!isEditing && (
+                     <div className="flex gap-4">
+                        <button onClick={() => setIsPasswordModalOpen(true)} className="bg-white text-black border border-gray-300 font-semibold py-2 px-5 rounded-lg hover:bg-gray-100 transition-all text-sm shadow-sm">
+                            Change Password
+                        </button>
+                        <button onClick={handleEdit} className="bg-black text-white font-semibold py-2 px-5 rounded-lg hover:bg-gray-800 transition-all text-sm shadow-sm">
+                            Edit Profile
+                        </button>
+                    </div>
+                )}
+            </div>
+            <div className="p-6">
+                <div className="space-y-6">
+                    <div>
+                        <label className="text-sm font-medium text-gray-600 block mb-1.5">Full Name</label>
+                        {isEditing ? (
+                            <input type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full rounded-md border border-gray-300 p-3 text-black shadow-sm focus:border-black focus:ring-0 focus:outline-none transition-colors" />
+                        ) : (
+                            <p className="text-black text-base">{user.name}</p>
+                        )}
+                    </div>
+                    <div>
+                        <label className="text-sm font-medium text-gray-600 block mb-1.5">Email Address</label>
+                        {isEditing ? (
+                            <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full rounded-md border border-gray-300 p-3 text-black shadow-sm focus:border-black focus:ring-0 focus:outline-none transition-colors" />
+                        ) : (
+                            <p className="text-black text-base">{user.email}</p>
+                        )}
+                    </div>
+                </div>
+                {isEditing && (
+                    <div className="mt-8 pt-6 border-t border-gray-200/80 flex justify-end gap-4">
+                        <button onClick={handleCancel} className="bg-white text-black border border-gray-300 font-semibold py-2 px-5 rounded-lg hover:bg-gray-100 transition-all text-sm shadow-sm">
+                            Cancel
+                        </button>
+                        <button onClick={handleSave} className="bg-black text-white font-semibold py-2 px-5 rounded-lg hover:bg-gray-800 transition-all text-sm shadow-sm">
+                            Save Changes
+                        </button>
+                    </div>
+                )}
+            </div>
         </div>
-        <div className="text-center py-24 px-6 text-gray-500">
-             <p className="font-medium">Coming Soon</p>
-             <p className="text-sm mt-1">This feature is currently under development.</p>
-        </div>
-    </div>
-);
+        
+        {/* Password Change Modal */}
+        {isPasswordModalOpen && (
+            <Modal onClose={() => setIsPasswordModalOpen(false)}>
+                 <h2 className="text-2xl font-bold text-black mb-2">Change Password</h2>
+                 <p className="text-sm text-gray-600 mb-6">Enter your current and new password.</p>
+                 <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                    <input type="password" name="currentPassword" value={passwordData.currentPassword} onChange={handlePasswordInputChange} placeholder="Current Password" className="w-full rounded-md border border-gray-300 p-3 text-black shadow-sm focus:border-black focus:ring-0 focus:outline-none transition-colors" />
+                    <input type="password" name="newPassword" value={passwordData.newPassword} onChange={handlePasswordInputChange} placeholder="New Password" className="w-full rounded-md border border-gray-300 p-3 text-black shadow-sm focus:border-black focus:ring-0 focus:outline-none transition-colors" />
+                    <input type="password" name="confirmPassword" value={passwordData.confirmPassword} onChange={handlePasswordInputChange} placeholder="Confirm New Password" className="w-full rounded-md border border-gray-300 p-3 text-black shadow-sm focus:border-black focus:ring-0 focus:outline-none transition-colors" />
+                    {passwordError && <p className="text-sm text-red-600">{passwordError}</p>}
+                    <button type="submit" className="w-full bg-black text-white font-semibold py-3 px-5 rounded-lg hover:bg-gray-800 transition-all text-sm shadow-sm">
+                        Update Password
+                    </button>
+                 </form>
+            </Modal>
+        )}
+        
+        {/* OTP Verification Modal */}
+        {isOtpModalOpen && (
+             <Modal onClose={() => setIsOtpModalOpen(false)}>
+                 <h2 className="text-2xl font-bold text-black mb-2">Verify Your Email</h2>
+                 <p className="text-sm text-gray-600 mb-6">We've sent a 6-digit code to <span className="font-semibold">{formData.email}</span>. Please enter it below.</p>
+                 <form onSubmit={handleOtpSubmit} className="space-y-4">
+                     <input type="text" value={otp} onChange={(e) => {setOtp(e.target.value); setOtpError('')}} placeholder="Enter OTP" className="w-full rounded-md border border-gray-300 p-3 text-black shadow-sm focus:border-black focus:ring-0 focus:outline-none transition-colors text-center tracking-[0.5em]" maxLength={6}/>
+                     {otpError && <p className="text-sm text-red-600">{otpError}</p>}
+                     <button type="submit" className="w-full bg-black text-white font-semibold py-3 px-5 rounded-lg hover:bg-gray-800 transition-all text-sm shadow-sm">
+                        Verify & Save
+                     </button>
+                 </form>
+             </Modal>
+        )}
+    </>
+    );
+};
+
+const AddressBookView: React.FC = () => {
+    const { user, addAddress, updateAddress, deleteAddress, setDefaultAddress } = useAuth();
+    const { addToast } = useToast();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingAddress, setEditingAddress] = useState<Address | null>(null);
+
+    const openAddModal = () => {
+        setEditingAddress(null);
+        setIsModalOpen(true);
+    };
+
+    const openEditModal = (address: Address) => {
+        setEditingAddress(address);
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = (addressId: string) => {
+        if (window.confirm('Are you sure you want to delete this address?')) {
+            deleteAddress(addressId);
+            addToast('Address deleted.', 'info');
+        }
+    };
+
+    return (
+        <>
+            <div className="bg-white rounded-xl border border-gray-200/80 shadow-sm">
+                <div className="border-b border-gray-200/80 px-6 py-5 flex justify-between items-center">
+                    <div>
+                        <h2 className="text-xl font-bold text-black">Address Book</h2>
+                        <p className="text-sm text-gray-500 mt-1">Manage your saved shipping addresses.</p>
+                    </div>
+                    {(!user?.addresses || user.addresses.length === 0) && (
+                        <button onClick={openAddModal} className="bg-black text-white font-semibold py-2 px-5 rounded-lg hover:bg-gray-800 transition-all text-sm shadow-sm">
+                            Add New Address
+                        </button>
+                    )}
+                </div>
+                <div className="p-6">
+                    {user?.addresses && user.addresses.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {user.addresses.map(address => (
+                                <div key={address.id} className="p-6 bg-gray-50/80 rounded-lg border border-gray-200/80 flex flex-col justify-between">
+                                    <div>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <p className="font-bold text-black">{address.firstName} {address.lastName}</p>
+                                            {address.isDefault && <span className="text-xs font-semibold bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">Default</span>}
+                                        </div>
+                                        <div className="text-sm text-gray-600">
+                                            <p>{address.addressLine1}</p>
+                                            {address.addressLine2 && <p>{address.addressLine2}</p>}
+                                            <p>{address.city}, {address.state} {address.postalCode}</p>
+                                            <p>{address.country}</p>
+                                            <p className="mt-1">{address.phone}</p>
+                                        </div>
+                                    </div>
+                                    <div className="mt-4 pt-4 border-t border-gray-200/80 flex items-center justify-between text-sm font-medium">
+                                        <div className="flex gap-4">
+                                            <button onClick={() => openEditModal(address)} className="text-black hover:underline">Edit</button>
+                                            <button onClick={() => handleDelete(address.id)} className="text-red-600 hover:underline">Delete</button>
+                                        </div>
+                                        {!address.isDefault && (
+                                            <button onClick={() => setDefaultAddress(address.id)} className="text-gray-600 hover:text-black hover:underline">Set as Default</button>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center py-16">
+                            <p className="text-gray-500">You have no saved addresses.</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+            {isModalOpen && (
+                <AddressModal
+                    address={editingAddress}
+                    onClose={() => setIsModalOpen(false)}
+                    onSave={(addr) => {
+                        if (editingAddress) {
+                            updateAddress({ ...addr, id: editingAddress.id });
+                            addToast('Address updated successfully!', 'success');
+                        } else {
+                            addAddress(addr);
+                            addToast('Address added successfully!', 'success');
+                        }
+                        setIsModalOpen(false);
+                    }}
+                />
+            )}
+        </>
+    );
+};
+
+// Address Form Modal
+const AddressModal: React.FC<{
+    address: Address | null;
+    onClose: () => void;
+    onSave: (address: Omit<Address, 'id'>) => void;
+}> = ({ address, onClose, onSave }) => {
+    const [formState, setFormState] = useState({
+        firstName: address?.firstName || '',
+        lastName: address?.lastName || '',
+        addressLine1: address?.addressLine1 || '',
+        addressLine2: address?.addressLine2 || '',
+        city: address?.city || '',
+        state: address?.state || '',
+        postalCode: address?.postalCode || '',
+        country: address?.country || 'India',
+        phone: address?.phone || '',
+        isDefault: address?.isDefault || false,
+    });
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value, type } = e.target;
+        const checked = (e.target as HTMLInputElement).checked;
+        setFormState(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave(formState);
+    };
+
+    const inputClass = "w-full rounded-md border border-gray-300 p-3 text-black shadow-sm focus:border-black focus:ring-0 focus:outline-none transition-colors";
+
+    return (
+        <Modal onClose={onClose}>
+            <h2 className="text-2xl font-bold text-black mb-4">{address ? 'Edit Address' : 'Add New Address'}</h2>
+            <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+                 <div className="grid grid-cols-2 gap-4">
+                    <input type="text" name="firstName" value={formState.firstName} onChange={handleChange} placeholder="First Name" required className={inputClass} />
+                    <input type="text" name="lastName" value={formState.lastName} onChange={handleChange} placeholder="Last Name" required className={inputClass} />
+                 </div>
+                <input type="text" name="addressLine1" value={formState.addressLine1} onChange={handleChange} placeholder="Address" required className={inputClass} />
+                <input type="text" name="addressLine2" value={formState.addressLine2} onChange={handleChange} placeholder="Apartment, suite, etc. (optional)" className={inputClass} />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <input type="text" name="city" value={formState.city} onChange={handleChange} placeholder="City" required className={inputClass} />
+                    <select name="state" value={formState.state} onChange={handleChange} required className={inputClass}>
+                        <option value="" disabled>Select State</option>
+                        {indianStates.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                    <input type="text" name="postalCode" value={formState.postalCode} onChange={handleChange} placeholder="PIN Code" required pattern="[0-9]{6}" className={inputClass} />
+                </div>
+                 <input type="text" name="country" value={formState.country} onChange={handleChange} placeholder="Country" required disabled className={`${inputClass} bg-gray-100`} />
+                 <input type="tel" name="phone" value={formState.phone} onChange={handleChange} placeholder="Phone Number" required pattern="\d{10,}" className={inputClass} />
+                 
+                 <div className="flex items-center">
+                    <input type="checkbox" id="isDefault" name="isDefault" checked={formState.isDefault} onChange={handleChange} className="h-4 w-4 text-black border-gray-300 rounded focus:ring-black" />
+                    <label htmlFor="isDefault" className="ml-2 block text-sm text-gray-700">Set as default address</label>
+                 </div>
+
+                 <div className="pt-4 flex justify-end gap-4">
+                     <button type="button" onClick={onClose} className="bg-white text-black border border-gray-300 font-semibold py-2 px-5 rounded-lg hover:bg-gray-100 transition-all text-sm shadow-sm">
+                        Cancel
+                    </button>
+                    <button type="submit" className="bg-black text-white font-semibold py-2 px-5 rounded-lg hover:bg-gray-800 transition-all text-sm shadow-sm">
+                        Save Address
+                    </button>
+                 </div>
+            </form>
+        </Modal>
+    );
+};
 
 
 // --- Main Account Page Component ---
@@ -187,9 +558,9 @@ const AccountPage: React.FC = () => {
       case 'orders':
         return <OrderHistoryView />;
       case 'profile':
-        return <PlaceholderView title="Profile Settings" />;
+        return <ProfileSettingsView />;
       case 'addresses':
-        return <PlaceholderView title="Address Book" />;
+        return <AddressBookView />;
       default:
         return <OverviewView user={user} onNavigate={setActiveView} />;
     }
