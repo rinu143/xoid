@@ -3,9 +3,7 @@ export interface Product {
   name: string;
   price: number;
   imageUrls: string[];
-  tshirtOnlyImageUrl: string;
   description: string;
-  aiPromptDescription: string;
   color: string;
   material: string;
   stock: number;

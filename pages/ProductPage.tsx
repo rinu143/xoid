@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Product, Review } from '../types';
 import { useCart } from '../App';
-import VirtualTryOn from '../components/VirtualTryOn';
 import { reviews as allReviews } from '../data/reviews';
 import ProductReviews from '../components/ProductReviews';
 import ReviewForm from '../components/ReviewForm';
@@ -268,15 +267,6 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
                       {isOutOfStock ? 'Out of Stock' : 'Buy It Now'}
                   </button>
               </div>
-              <Link
-                to={`/virtual-try-on/${product.id}`}
-                className="w-full bg-white border border-black rounded-md py-4 px-8 flex items-center justify-center text-base font-bold text-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-black transition-colors"
-              >
-                <svg className="ai-star h-5 w-5 mr-3" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 2L10.25 10.25L2 12L10.25 13.75L12 22L13.75 13.75L22 12L13.75 10.25L12 2Z" fill="currentColor"/>
-                </svg>
-                <span className="shiny-text">Virtual Try-On</span>
-              </Link>
             </div>
 
           {/* Social Share Section */}

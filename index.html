@@ -15,56 +15,6 @@
       body {
         font-family: 'Inter', sans-serif;
       }
-
-      .shiny-text {
-        background: linear-gradient(90deg, #000000 40%, #ffffff 50%, #000000 60%);
-        background-size: 200% 100%;
-        -webkit-background-clip: text;
-        -moz-background-clip: text;
-        background-clip: text;
-        color: transparent;
-        animation: shine-text-anim 5s linear infinite;
-        animation-delay: 2s;
-      }
-
-      @keyframes shine-text-anim {
-        0% {
-          background-position: 150% 0;
-        }
-        100% {
-          background-position: -150% 0;
-        }
-      }
-      
-      .ai-star {
-        animation: ai-star-burst 2s ease-in-out infinite;
-        animation-delay: .5s;
-        transform-origin: center;
-        display: inline-block; /* Ensures transform-origin works correctly */
-      }
-
-      @keyframes ai-star-burst {
-        0%, 25%, 100% {
-          transform: scale(0) rotate(0deg);
-          opacity: 0;
-        }
-        5% {
-          transform: scale(1.4) rotate(15deg);
-          opacity: 1;
-        }
-        10% {
-          transform: scale(1) rotate(-10deg);
-          opacity: 1;
-        }
-        15% {
-          transform: scale(1.2) rotate(5deg);
-          opacity: 1;
-        }
-        20% {
-          transform: scale(1) rotate(0deg);
-          opacity: 1;
-        }
-      }
     </style>
   <script type="importmap">
 {

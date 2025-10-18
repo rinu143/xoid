@@ -11,7 +11,6 @@ import LoginPage from './pages/LoginPage';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import { ToastProvider, useToast } from './components/ToastProvider';
-import VirtualTryOnPage from './pages/VirtualTryOnPage';
 import AccountPage from './pages/AccountPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import BackToTopButton from './components/BackToTopButton';
@@ -166,8 +165,6 @@ const App: React.FC = () => {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/shop" element={<ShopPage />} />
                   <Route path="/product/:id" element={<ProductPage products={products}/>} />
-                  <Route path="/virtual-try-on" element={<VirtualTryOnPage />} />
-                  <Route path="/virtual-try-on/:id" element={<VirtualTryOnPage />} />
                   <Route path="/cart" element={<CartPage />} />
                   <Route 
                     path="/checkout"

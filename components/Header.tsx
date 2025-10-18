@@ -42,21 +42,6 @@ const Header: React.FC = () => {
             <div className="ml-10 flex items-baseline space-x-8">
               <NavItem to="/">Home</NavItem>
               <NavItem to="/shop">Shop</NavItem>
-               <NavLink
-                to="/virtual-try-on"
-                className="relative group py-2 text-base font-bold flex items-center gap-1.5"
-              >
-                {({ isActive }) => (
-                  <>
-                    <span className="shiny-text">Virtual Try-On</span>
-                     <svg className="ai-star" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 2L10.25 10.25L2 12L10.25 13.75L12 22L13.75 13.75L22 12L13.75 10.25L12 2Z" fill="black"/>
-                    </svg>
-                    <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-black transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-center"></span>
-                    {isActive && <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-black"></span>}
-                  </>
-                )}
-              </NavLink>
             </div>
           </div>
           <div className="flex items-center">
