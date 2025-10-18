@@ -108,7 +108,7 @@ const ShopPage: React.FC = () => {
       <section className="relative bg-black bg-cover bg-center py-20 md:py-32 mb-12 rounded-lg overflow-hidden">
         <div 
             className="absolute inset-0 z-0 bg-cover bg-center opacity-40"
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1516762689621-3e48226154c8?q=80&w=1974&auto=format&fit=crop')" }}
+            style={{ backgroundImage: "url('https://saberandsacrifice.com/cdn/shop/files/DSC01373_4124x2749_crop_center.jpg?v=1757669574')" }}
         ></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent z-10"></div>
         <div className="relative z-20 text-center px-4">
