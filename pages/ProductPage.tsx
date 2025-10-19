@@ -25,6 +25,7 @@ const ProductPage: React.FC = () => {
   const { addToCart, buyNow } = useCart();
   const { isProductInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { addToast } = useToast();
+  const navigate = useNavigate();
   
   const product = products.find(p => p.id === parseInt(id || ''));
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -104,6 +105,11 @@ const ProductPage: React.FC = () => {
     }
     setAddToCartError(null);
     buyNow(product, 1, selectedSize);
+  };
+  
+  const handleVirtualTryOn = () => {
+    if (!product) return;
+    navigate(`/virtual-try-on/${product.id}`);
   };
 
   const handleWishlistToggle = () => {
@@ -310,46 +316,73 @@ const ProductPage: React.FC = () => {
                 )}
             </div>
 
-
             <div className="mt-6 space-y-4">
-                {addToCartError && <p className="text-sm text-center text-red-600 mb-2">{addToCartError}</p>}
-                <div className="flex gap-4">
-                    <button
-                        onClick={handleAddToCart}
-                        type="button"
-                        disabled={isOutOfStock}
-                        className="relative flex-1 w-full bg-black border border-transparent rounded-md py-4 px-8 flex items-center justify-center text-base font-bold text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all duration-200 ease-in-out transform active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed overflow-hidden"
-                    >
-                      <span className={`transition-transform duration-300 ease-in-out flex items-center justify-center ${addToCartState === 'idle' ? 'translate-y-0' : '-translate-y-12'}`}>
-                        {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-                      </span>
-                      <span className={`absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-in-out ${addToCartState === 'success' ? 'translate-y-0' : 'translate-y-12'}`}>
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                          Added to Cart!
-                      </span>
-                    </button>
-                    <button
-                        onClick={handleWishlistToggle}
-                        type="button"
-                        aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                        className={`flex-shrink-0 h-auto w-14 flex items-center justify-center rounded-md border transition-all duration-200 ease-in-out transform active:scale-95 ${isInWishlist ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-300 text-black hover:bg-gray-100'}`}
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill={isInWishlist ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                        </svg>
-                    </button>
-                </div>
-                 <button
-                      onClick={handleBuyNow}
-                      type="button"
-                      disabled={isOutOfStock}
-                      className="w-full bg-white border border-black rounded-md py-4 px-8 flex items-center justify-center text-base font-bold text-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all duration-200 ease-in-out transform active:scale-95 disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed"
-                  >
-                      Buy It Now
-                  </button>
+              {addToCartError && <p className="text-sm text-center text-red-600">{addToCartError}</p>}
+              
+              {/* Primary Action Row: Add to Cart + Wishlist */}
+              <div className="flex items-stretch gap-3">
+                {/* Add to Cart */}
+                <button
+                  onClick={handleAddToCart}
+                  type="button"
+                  disabled={isOutOfStock}
+                  className="relative flex-1 bg-black border border-transparent rounded-md py-4 px-8 flex items-center justify-center text-base font-bold text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all duration-200 ease-in-out transform active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed overflow-hidden"
+                >
+                  <span className={`transition-transform duration-300 ease-in-out flex items-center justify-center ${addToCartState === 'idle' ? 'translate-y-0' : '-translate-y-12'}`}>
+                    {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                  </span>
+                  <span className={`absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-in-out ${addToCartState === 'success' ? 'translate-y-0' : 'translate-y-12'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    Added to Cart!
+                  </span>
+                </button>
+                {/* Wishlist */}
+                <button
+                  onClick={handleWishlistToggle}
+                  type="button"
+                  disabled={isOutOfStock}
+                  aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                  className={`flex-shrink-0 w-16 flex items-center justify-center rounded-md border py-4 px-4 text-base font-bold transition-all duration-200 ease-in-out transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isInWishlist ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-300 text-black hover:bg-gray-100'
+                  }`}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill={isInWishlist ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Alternative Action Row: Try On + Buy Now */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Virtual Try-On */}
+                <button
+                  onClick={handleVirtualTryOn}
+                  type="button"
+                  disabled={isOutOfStock}
+                  className="shine-effect w-full bg-white border border-gray-300 rounded-md py-4 px-8 flex items-center justify-center text-base font-bold text-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all duration-200 ease-in-out transform active:scale-95 disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed"
+                >
+                  <span className="flex items-center">
+                    Virtual Try-On
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2 ai-star-sparkle" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 0L14.24 9.76L24 12L14.24 14.24L12 24L9.76 14.24L0 12L9.76 9.76L12 0Z" />
+                    </svg>
+                  </span>
+                </button>
+                
+                {/* Buy It Now */}
+                <button
+                  onClick={handleBuyNow}
+                  type="button"
+                  disabled={isOutOfStock}
+                  className="w-full bg-black border border-transparent rounded-md py-4 px-8 flex items-center justify-center text-base font-bold text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-all duration-200 ease-in-out transform active:scale-95 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  Buy It Now
+                </button>
+              </div>
             </div>
+
 
           {/* Social Share Section */}
           <div className="mt-8 text-center sm:text-left">

@@ -18,6 +18,7 @@ import BackToTopButton from './components/BackToTopButton';
 import WishlistPage from './pages/WishlistPage';
 import HelpWidget from './components/HelpWidget';
 import AdminPage from './pages/admin/AdminPage';
+import VirtualTryOnPage from './pages/VirtualTryOnPage';
 
 // Product Context
 interface ProductContextType {
@@ -440,6 +441,8 @@ const App: React.FC = () => {
                           </ProtectedRoute>
                         }
                       />
+                      <Route path="/virtual-try-on" element={<VirtualTryOnPage />} />
+                      <Route path="/virtual-try-on/:id" element={<VirtualTryOnPage />} />
                       <Route
                         path="/admin/*"
                         element={

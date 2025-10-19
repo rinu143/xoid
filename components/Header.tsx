@@ -220,6 +220,27 @@ const Header: React.FC = () => {
               <div className="ml-10 flex items-baseline space-x-8">
                 <NavItem to="/">Home</NavItem>
                 <NavItem to="/shop">Shop</NavItem>
+                <NavLink 
+                  to="/virtual-try-on" 
+                  className={({ isActive }) => 
+                    `shine-effect relative group py-2 text-base font-bold transition-colors duration-300 ${
+                      isActive ? 'text-black' : 'text-gray-700 hover:text-black'
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span className="flex items-center">
+                        Virtual Try-On
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1.5 ai-star-sparkle" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M12 0L14.24 9.76L24 12L14.24 14.24L12 24L9.76 14.24L0 12L9.76 9.76L12 0Z" />
+                        </svg>
+                      </span>
+                      <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-black transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out origin-center"></span>
+                      {isActive && <span className="absolute bottom-0 left-0 w-full h-[1.5px] bg-black"></span>}
+                    </>
+                  )}
+                </NavLink>
                 {isAdmin && <NavItem to="/admin">Admin</NavItem>}
               </div>
             </div>

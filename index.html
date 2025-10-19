@@ -15,6 +15,47 @@
       body {
         font-family: 'Inter', sans-serif;
       }
+      @keyframes shine {
+        0% { transform: translateX(-100%) skewX(-25deg); }
+        100% { transform: translateX(100%) skewX(-25deg); }
+      }
+      .shine-effect {
+        position: relative;
+        overflow: hidden;
+      }
+      .shine-effect::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 75%; /* Made wider for more impact */
+        height: 100%;
+        background: linear-gradient(
+          to right,
+          rgba(255, 255, 255, 0) 0%,
+          rgba(255, 255, 255, 0.9) 50%, /* Made brighter */
+          rgba(255, 255, 255, 0) 100%
+        );
+        transform: translateX(-100%) skewX(-25deg);
+        animation: shine 5s infinite 3s;
+      }
+      /* New animation for the AI star */
+      @keyframes sparkle {
+        0%, 100% {
+          transform: scale(1) rotate(0deg);
+          opacity: 1;
+          color: black;
+        }
+        50% {
+          transform: scale(1.6) rotate(15deg);
+          opacity: 0.8;
+          color: #4f46e5; /* A magical indigo sparkle */
+        }
+      }
+      .ai-star-sparkle {
+        animation: sparkle 3s infinite ease-in-out;
+        animation-delay: 4.5s; /* Stagger after the shine effect */
+      }
     </style>
   <script type="importmap">
 {

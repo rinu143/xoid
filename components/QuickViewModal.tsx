@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Product } from '../types';
 import { useCart, useWishlist } from '../App';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface QuickViewModalProps {
   product: Product;
@@ -22,6 +22,7 @@ const SizeStockDisplay: React.FC<{ stock: number }> = ({ stock }) => {
 const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => {
   const { addToCart } = useCart();
   const { isProductInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
+  const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
@@ -53,6 +54,12 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
     } else {
       addToWishlist(product.id);
     }
+  };
+  
+  const handleVirtualTryOn = () => {
+    if (!product) return;
+    onClose();
+    navigate(`/virtual-try-on/${product.id}`);
   };
 
   const handleModalContentClick = (e: React.MouseEvent) => {
@@ -191,9 +198,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
 
           </div>
 
-          <div className="mt-4">
+          <div className="mt-4 space-y-4">
             {!isOutOfStock && (
-                <div className="flex items-center space-x-4 mb-6">
+                <div className="flex items-center space-x-4">
                     <label htmlFor="quantity" className="text-sm font-medium text-black">Quantity</label>
                     <div className="flex items-center border border-gray-300 rounded-md">
                         <button
@@ -242,10 +249,22 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                     </svg>
                 </button>
             </div>
+            <button
+              onClick={handleVirtualTryOn}
+              disabled={isOutOfStock}
+              className="shine-effect w-full bg-white border border-black rounded-md py-3 px-6 flex items-center justify-center text-sm font-bold text-black hover:bg-gray-100 transition-all duration-200 ease-in-out transform active:scale-95 disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed"
+            >
+              <span className="flex items-center">
+                Virtual Try-On
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-2 ai-star-sparkle" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0L14.24 9.76L24 12L14.24 14.24L12 24L9.76 14.24L0 12L9.76 9.76L12 0Z" />
+                </svg>
+              </span>
+            </button>
             <Link
               to={`/product/${product.id}`}
               onClick={onClose}
-              className="mt-4 block text-center w-full text-black font-medium hover:underline text-sm"
+              className="block text-center w-full text-black font-medium hover:underline text-sm"
             >
               View Full Product Details
             </Link>

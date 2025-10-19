@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Product } from '../types';
-// FIX: Corrected import to use the exported `productsData` and aliased it as `products`.
-import { productsData as products } from '../data/products';
+// FIX: Replaced direct data import with the `useProducts` context hook for consistency.
+import { useProducts } from '../App';
 import VirtualTryOn from '../components/VirtualTryOn';
 
 // A new component for the product selection card for a cleaner structure
@@ -36,6 +36,8 @@ const ProductSelectionCard: React.FC<{ product: Product; onSelect: () => void; }
 const VirtualTryOnPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  // FIX: Switched from static data to the useProducts hook to resolve the error.
+  const { products } = useProducts();
 
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isViewVisible, setIsViewVisible] = useState(false); // Start false for initial animation
@@ -60,7 +62,7 @@ const VirtualTryOnPage: React.FC = () => {
     }, 300); // This delay should match the CSS transition duration
 
     return () => clearTimeout(animationTimer);
-  }, [id, navigate]);
+  }, [id, navigate, products]);
 
   const handleSelectProduct = (product: Product) => {
     // Navigate and let the useEffect handle the state update and animation
