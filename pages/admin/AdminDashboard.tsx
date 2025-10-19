@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useProducts, useAuth } from '../../App';
 import { mockOrders } from '../../data/orders';
+import { Product } from '../../types';
 
 const StatCard: React.FC<{ title: string; value: string | number; icon: React.ReactNode }> = ({ title, value, icon }) => (
     <div className="bg-white p-6 rounded-xl border border-gray-200/80 shadow-sm flex items-center gap-5">
@@ -14,36 +15,139 @@ const StatCard: React.FC<{ title: string; value: string | number; icon: React.Re
     </div>
 );
 
-const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
-    const statusClasses = status === 'Shipped'
-        ? 'bg-blue-100 text-blue-800'
-        : status === 'Delivered'
-        ? 'bg-green-100 text-green-800'
-        : 'bg-yellow-100 text-yellow-800';
+// --- New Analytics Components ---
+
+const AnalyticsCard: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+    <div className="bg-white p-6 rounded-xl border border-gray-200/80 shadow-sm">
+        <h3 className="text-lg font-bold text-black mb-4">{title}</h3>
+        {children}
+    </div>
+);
+
+interface ChartData {
+    label: string;
+    value: number;
+}
+
+const BarChart: React.FC<{ data: ChartData[], yLabel?: string }> = ({ data, yLabel = '' }) => {
+    const maxValue = Math.max(...data.map(d => d.value), 1); // Avoid division by zero
 
     return (
-        <span className={`px-2.5 py-0.5 text-xs font-semibold rounded-full ${statusClasses}`}>
-            {status}
-        </span>
+        <div className="h-64 flex items-end justify-around space-x-4">
+            {data.map(item => (
+                <div key={item.label} className="flex-1 text-center flex flex-col justify-end items-center h-full">
+                    <div 
+                        className="w-full bg-black rounded-t-md transition-all duration-500 ease-out hover:bg-gray-700"
+                        style={{ height: `${(item.value / maxValue) * 100}%` }}
+                        title={`${yLabel}${item.value.toLocaleString()}`}
+                    >
+                    </div>
+                    <span className="mt-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">{item.label}</span>
+                </div>
+            ))}
+        </div>
     );
 };
+
+// FIX: Update the prop type for the BestSellers component to include the 'totalSold' property, resolving a TypeScript error.
+const BestSellers: React.FC<{ products: (Product & { totalSold: number })[] }> = ({ products }) => (
+    <AnalyticsCard title="Best Sellers">
+        <div className="space-y-4">
+            {products.slice(0, 4).map((product, index) => (
+                <div key={product.id} className="flex items-center gap-4">
+                    <img src={product.imageUrls[0]} alt={product.name} className="w-12 h-16 object-cover rounded-md bg-gray-100"/>
+                    <div className="flex-grow">
+                        <p className="font-semibold text-sm text-black">{product.name}</p>
+                        <p className="text-xs text-gray-500">{product.totalSold} units sold</p>
+                    </div>
+                     <span className="text-lg font-bold text-gray-300">#{index + 1}</span>
+                </div>
+            ))}
+        </div>
+    </AnalyticsCard>
+);
+
+const LowStockAlerts: React.FC<{ products: Product[] }> = ({ products }) => (
+    <AnalyticsCard title="Low Stock Alerts">
+        <div className="space-y-3">
+            {products.length > 0 ? products.slice(0, 5).map(product => (
+                <div key={product.id} className="flex justify-between items-center text-sm">
+                    <p className="font-medium text-black">{product.name}</p>
+                    <span className={`font-bold px-2 py-0.5 rounded-md text-xs ${product.stock <= 2 ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {product.stock} left
+                    </span>
+                </div>
+            )) : <p className="text-sm text-gray-500 text-center py-8">All products are well-stocked!</p>}
+        </div>
+    </AnalyticsCard>
+);
+
+
+// --- Main Admin Dashboard Component ---
 
 const AdminDashboard: React.FC = () => {
     const { products } = useProducts();
     const { users } = useAuth();
 
-    const totalSales = mockOrders.reduce((acc, order) => {
-        const value = parseFloat(order.total.replace('$', ''));
-        return acc + value;
-    }, 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-    
-    const totalOrders = mockOrders.length;
+    // --- Data Processing for Analytics ---
+
+    const { salesData, trafficData, bestSellers, lowStockProducts, totalSales, totalOrders } = useMemo(() => {
+        // Sales Data
+        const salesByMonth: { [key: string]: number } = mockOrders.reduce((acc, order) => {
+            const month = new Date(order.date).toLocaleString('default', { month: 'short' });
+            const value = parseFloat(order.total.replace('$', ''));
+            acc[month] = (acc[month] || 0) + value;
+            return acc;
+        }, {} as { [key: string]: number });
+        
+        const salesData = Object.entries(salesByMonth).map(([label, value]) => ({ label, value }));
+        
+        // Mock Traffic Data for the last 7 days
+        const trafficData = [
+            { label: 'Mon', value: 1843 },
+            { label: 'Tue', value: 2102 },
+            { label: 'Wed', value: 2439 },
+            { label: 'Thu', value: 2280 },
+            { label: 'Fri', value: 2987 },
+            { label: 'Sat', value: 3412 },
+            { label: 'Sun', value: 3105 },
+        ];
+        
+        // Best Sellers Data
+        const salesCounts = mockOrders
+          .flatMap(order => order.items)
+          .reduce((acc, item) => {
+            acc[item.id] = (acc[item.id] || 0) + item.quantity;
+            return acc;
+          }, {} as {[key: number]: number});
+
+        const bestSellers = Object.entries(salesCounts)
+            .map(([productId, totalSold]) => {
+                const product = products.find(p => p.id === parseInt(productId));
+                return product ? { ...product, totalSold } : null;
+            })
+            .filter((p): p is Product & { totalSold: number } => p !== null)
+            .sort((a, b) => b.totalSold - a.totalSold);
+
+        // Low Stock Data
+        const lowStockProducts = products
+            .filter(p => p.stock > 0 && p.stock <= 5)
+            .sort((a, b) => a.stock - b.stock);
+
+        // Recalculate stats here for consistency
+        const totalSales = mockOrders.reduce((acc, order) => acc + parseFloat(order.total.replace('$', '')), 0)
+            .toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        const totalOrders = mockOrders.length;
+        
+        return { salesData, trafficData, bestSellers, lowStockProducts, totalSales, totalOrders };
+    }, [products]);
+
     const totalProducts = products.length;
     const totalUsers = users.length;
-    const recentOrders = mockOrders.slice(0, 5);
 
     return (
         <div className="space-y-8">
+            {/* Stat Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-6">
                 <StatCard 
                     title="Total Sales" 
@@ -67,34 +171,18 @@ const AdminDashboard: React.FC = () => {
                 />
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200/80 shadow-sm">
-                <div className="border-b border-gray-200/80 px-6 py-5">
-                    <h2 className="text-xl font-bold text-black">Recent Orders</h2>
-                    <p className="text-sm text-gray-500 mt-1">A quick look at the latest customer orders.</p>
-                </div>
-                <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm text-left">
-                        <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
-                            <tr>
-                                <th scope="col" className="px-6 py-3 font-semibold">Order ID</th>
-                                <th scope="col" className="px-6 py-3 font-semibold">Customer</th>
-                                <th scope="col" className="px-6 py-3 font-semibold">Status</th>
-                                <th scope="col" className="px-6 py-3 font-semibold text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200/80">
-                            {recentOrders.map(order => (
-                                <tr key={order.id}>
-                                    <td className="px-6 py-4 font-semibold text-black whitespace-nowrap">#{order.id}</td>
-                                    <td className="px-6 py-4 text-gray-700 whitespace-nowrap">{order.customer}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap"><StatusBadge status={order.status} /></td>
-                                    <td className="px-6 py-4 text-gray-800 whitespace-nowrap text-right">{order.total}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+            {/* Analytics Dashboards */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 <AnalyticsCard title="Sales Performance">
+                    <BarChart data={salesData} yLabel="$" />
+                </AnalyticsCard>
+                <AnalyticsCard title="Website Traffic (Last 7 Days)">
+                    <BarChart data={trafficData} />
+                </AnalyticsCard>
+                <BestSellers products={bestSellers} />
+                <LowStockAlerts products={lowStockProducts} />
             </div>
+
         </div>
     );
 };
