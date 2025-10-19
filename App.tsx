@@ -14,6 +14,7 @@ import { ToastProvider, useToast } from './components/ToastProvider';
 import AccountPage from './pages/AccountPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import BackToTopButton from './components/BackToTopButton';
+import WishlistPage from './pages/WishlistPage';
 
 // Cart Context
 interface CartContextType {
@@ -34,6 +35,24 @@ export const useCart = () => {
     throw new Error('useCart must be used within a CartProvider');
   }
   return context;
+};
+
+// Wishlist Context
+interface WishlistContextType {
+  wishlist: number[]; // Array of product IDs
+  addToWishlist: (productId: number) => void;
+  removeFromWishlist: (productId: number) => void;
+  isProductInWishlist: (productId: number) => boolean;
+}
+
+const WishlistContext = createContext<WishlistContextType | null>(null);
+
+export const useWishlist = () => {
+    const context = useContext(WishlistContext);
+    if (!context) {
+        throw new Error('useWishlist must be used within a WishlistProvider');
+    }
+    return context;
 };
 
 // Auth Context
@@ -173,6 +192,44 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
+const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [wishlist, setWishlist] = useState<number[]>([]);
+    const { addToast } = useToast();
+    const { isLoggedIn, setPendingAction } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const _performAddToWishlist = useCallback((productId: number) => {
+        setWishlist(prev => [...prev, productId]);
+        const product = products.find(p => p.id === productId);
+        addToast(`${product?.name || 'Item'} added to wishlist!`);
+    }, [addToast]);
+    
+    const addToWishlist = useCallback((productId: number) => {
+        if (isLoggedIn) {
+            _performAddToWishlist(productId);
+        } else {
+            addToast('Please sign in to save items to your wishlist.', 'info');
+            setPendingAction(() => () => _performAddToWishlist(productId));
+            navigate('/login-required', { state: { from: location }, replace: true });
+        }
+    }, [isLoggedIn, _performAddToWishlist, setPendingAction, navigate, location, addToast]);
+    
+    const removeFromWishlist = useCallback((productId: number) => {
+        setWishlist(prev => prev.filter(id => id !== productId));
+        const product = products.find(p => p.id === productId);
+        addToast(`${product?.name || 'Item'} removed from wishlist.`, 'info');
+    }, [addToast]);
+
+    const isProductInWishlist = useCallback((productId: number) => {
+        return wishlist.includes(productId);
+    }, [wishlist]);
+
+    const value = { wishlist, addToWishlist, removeFromWishlist, isProductInWishlist };
+
+    return <WishlistContext.Provider value={value}>{children}</WishlistContext.Provider>;
+};
+
 
 const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -296,47 +353,57 @@ const App: React.FC = () => {
     <ToastProvider>
       <HashRouter>
         <AuthProvider>
-          <CartProvider>
-            <div className="flex flex-col min-h-screen bg-white text-gray-800">
-              <Header />
-              <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                <Routes>
-                  <Route path="/" element={<HomePage />} />
-                  <Route path="/shop" element={<ShopPage />} />
-                  <Route path="/product/:id" element={<ProductPage products={products}/>} />
-                  <Route path="/cart" element={<CartPage />} />
-                  <Route 
-                    path="/checkout"
-                    element={
-                      <ProtectedRoute>
-                        <CheckoutPage />
-                      </ProtectedRoute>
-                    }
-                  />
-                   <Route 
-                    path="/login-required" 
-                    element={
-                      <ProtectedRoute>
-                        {/* This content is never shown to unauthenticated users */}
-                        <div /> 
-                      </ProtectedRoute>
-                    }
-                  />
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route 
-                    path="/account" 
-                    element={
-                      <ProtectedRoute>
-                        <AccountPage />
-                      </ProtectedRoute>
-                    } 
-                  />
-                </Routes>
-              </main>
-              <Footer />
-              <BackToTopButton />
-            </div>
-          </CartProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <div className="flex flex-col min-h-screen bg-white text-gray-800">
+                <Header />
+                <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                  <Routes>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/shop" element={<ShopPage />} />
+                    <Route path="/product/:id" element={<ProductPage products={products}/>} />
+                    <Route path="/cart" element={<CartPage />} />
+                    <Route 
+                      path="/checkout"
+                      element={
+                        <ProtectedRoute>
+                          <CheckoutPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                     <Route 
+                      path="/login-required" 
+                      element={
+                        <ProtectedRoute>
+                          {/* This content is never shown to unauthenticated users */}
+                          <div /> 
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route path="/login" element={<LoginPage />} />
+                    <Route 
+                      path="/account" 
+                      element={
+                        <ProtectedRoute>
+                          <AccountPage />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route
+                      path="/wishlist"
+                      element={
+                        <ProtectedRoute>
+                          <WishlistPage />
+                        </ProtectedRoute>
+                      }
+                    />
+                  </Routes>
+                </main>
+                <Footer />
+                <BackToTopButton />
+              </div>
+            </CartProvider>
+          </WishlistProvider>
         </AuthProvider>
       </HashRouter>
     </ToastProvider>

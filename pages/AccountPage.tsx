@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../App';
 import { useToast } from '../components/ToastProvider';
 import { Address } from '../types';
+import WishlistPage from './WishlistPage';
 
 const mockOrders = [
   { id: 'Z01D-78923', date: 'July 25, 2024', total: '$275.00', status: 'Shipped', items: ['Void Echo Tee', 'Chrome Fragment Tee'] },
@@ -26,13 +27,15 @@ const icons: { [key: string]: React.ReactNode } = {
   orders: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
   profile: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>,
   addresses: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+  wishlist: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>,
   signOut: <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>,
 };
 
-type View = 'overview' | 'orders' | 'profile' | 'addresses';
+type View = 'overview' | 'orders' | 'profile' | 'addresses' | 'wishlist';
 const navItems: { id: View; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: icons.overview },
     { id: 'orders', label: 'Order History', icon: icons.orders },
+    { id: 'wishlist', label: 'My Wishlist', icon: icons.wishlist },
     { id: 'profile', label: 'Profile Settings', icon: icons.profile },
     { id: 'addresses', label: 'Address Book', icon: icons.addresses },
 ];
@@ -561,6 +564,8 @@ const AccountPage: React.FC = () => {
         return <ProfileSettingsView />;
       case 'addresses':
         return <AddressBookView />;
+      case 'wishlist':
+        return <WishlistPage showTitle={false} />;
       default:
         return <OverviewView user={user} onNavigate={setActiveView} />;
     }

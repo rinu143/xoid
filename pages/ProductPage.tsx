@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Product, Review } from '../types';
-import { useCart } from '../App';
+import { useCart, useWishlist } from '../App';
 import { reviews as allReviews } from '../data/reviews';
 import ProductReviews from '../components/ProductReviews';
 import ReviewForm from '../components/ReviewForm';
@@ -25,6 +25,7 @@ const StockDisplay: React.FC<{ stock: number }> = ({ stock }) => {
 const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
   const { id } = useParams<{ id: string }>();
   const { addToCart, buyNow } = useCart();
+  const { isProductInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { addToast } = useToast();
   
   const product = products.find(p => p.id === parseInt(id || ''));
@@ -69,6 +70,8 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
   if (!product) {
     return <div className="text-center py-20">Product not found.</div>;
   }
+  
+  const isInWishlist = isProductInWishlist(product.id);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -95,6 +98,15 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
     }
     setAddToCartError(null);
     buyNow(product, 1, selectedSize);
+  };
+
+  const handleWishlistToggle = () => {
+    if (!product) return;
+    if (isInWishlist) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product.id);
+    }
   };
   
   const handleAddReview = ({ rating, comment }: { rating: number; comment: string }) => {
@@ -245,25 +257,35 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
 
 
             <div className="mt-10 space-y-4">
-              {addToCartError && <p className="text-sm text-center text-red-600">{addToCartError}</p>}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button
-                      onClick={handleAddToCart}
-                      type="button"
-                      disabled={isOutOfStock}
-                      className="w-full bg-white border border-black rounded-md py-4 px-8 flex items-center justify-center text-base font-bold text-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-black transition-colors disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed"
-                  >
-                      {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-                  </button>
-                  <button
+                {addToCartError && <p className="text-sm text-center text-red-600 mb-2">{addToCartError}</p>}
+                <div className="flex gap-4">
+                    <button
+                        onClick={handleAddToCart}
+                        type="button"
+                        disabled={isOutOfStock}
+                        className="flex-1 w-full bg-black border border-transparent rounded-md py-4 px-8 flex items-center justify-center text-base font-bold text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                        {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                    </button>
+                    <button
+                        onClick={handleWishlistToggle}
+                        type="button"
+                        aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                        className={`flex-shrink-0 h-auto w-14 flex items-center justify-center rounded-md border transition-colors active:scale-95 ${isInWishlist ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-300 text-black hover:bg-gray-100'}`}
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill={isInWishlist ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                    </button>
+                </div>
+                 <button
                       onClick={handleBuyNow}
                       type="button"
                       disabled={isOutOfStock}
-                      className="w-full bg-black border border-transparent rounded-md py-4 px-8 flex items-center justify-center text-base font-bold text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-black transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="w-full bg-white border border-black rounded-md py-4 px-8 flex items-center justify-center text-base font-bold text-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors disabled:bg-gray-200 disabled:text-gray-500 disabled:border-gray-200 disabled:cursor-not-allowed"
                   >
-                      {isOutOfStock ? 'Out of Stock' : 'Buy It Now'}
+                      Buy It Now
                   </button>
-              </div>
             </div>
 
           {/* Social Share Section */}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Product } from '../types';
-import { useCart } from '../App';
+import { useCart, useWishlist } from '../App';
 import { Link } from 'react-router-dom';
 
 interface QuickViewModalProps {
@@ -21,10 +21,13 @@ const StockDisplay: React.FC<{ stock: number }> = ({ stock }) => {
 
 const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => {
   const { addToCart } = useCart();
+  const { isProductInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const isInWishlist = isProductInWishlist(product.id);
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -34,6 +37,14 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
     setError(null);
     addToCart(product, quantity, selectedSize);
     onClose();
+  };
+  
+  const handleWishlistToggle = () => {
+    if (isInWishlist) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product.id);
+    }
   };
 
   const handleModalContentClick = (e: React.MouseEvent) => {
@@ -90,7 +101,9 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
         {/* Product Info */}
         <div className="md:w-1/2 w-full p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-black">{product.name}</h2>
+            <div className="flex justify-between items-start gap-4">
+              <h2 className="text-3xl font-black tracking-tight text-black">{product.name}</h2>
+            </div>
             
             <div className="mt-4 flex items-center justify-between">
                 <p className="text-3xl text-gray-700">${product.price}</p>
@@ -170,16 +183,25 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                 </div>
             )}
              {error && <p className="text-sm text-red-600 mb-2 text-center">{error}</p>}
-             <button
-              onClick={handleAddToCart}
-              disabled={isOutOfStock}
-              className="w-full bg-black text-white font-bold py-3 px-6 rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
-            </button>
+            <div className="flex gap-4">
+                 <button
+                  onClick={handleAddToCart}
+                  disabled={isOutOfStock}
+                  className="flex-1 w-full h-12 bg-black text-white font-bold px-6 rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                </button>
+                 <button
+                    onClick={handleWishlistToggle}
+                    type="button"
+                    aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
+                    className={`flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-md border transition-colors active:scale-95 ${isInWishlist ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-300 text-black hover:bg-gray-100'}`}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill={isInWishlist ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                </button>
+            </div>
             <Link
               to={`/product/${product.id}`}
               onClick={onClose}
