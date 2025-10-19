@@ -6,7 +6,7 @@ import { useAuth } from '../App';
 const SocialButton: React.FC<{ icon: React.ReactNode; label: string }> = ({ icon, label }) => (
   <button
     type="button"
-    className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-black bg-white hover:bg-gray-50 transition-colors"
+    className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-black bg-white hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
   >
     {icon}
     <span className="ml-3">{label}</span>
@@ -53,6 +53,10 @@ const LoginPage: React.FC = () => {
   
   const nameFieldRef = useRef<HTMLDivElement>(null);
   const [nameFieldHeight, setNameFieldHeight] = useState(0);
+  const forgotPasswordButtonRef = useRef<HTMLButtonElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const resetEmailInputRef = useRef<HTMLInputElement>(null);
+
 
   const from = location.state?.from?.pathname || '/account';
 
@@ -62,6 +66,35 @@ const LoginPage: React.FC = () => {
     }
   }, [isLogin]);
 
+  useEffect(() => {
+    if (isForgotPasswordModalOpen) {
+        resetEmailInputRef.current?.focus();
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Tab') {
+                if (!modalRef.current) return;
+                // FIX: Use a more specific type for querySelectorAll to access the `disabled` property.
+                const focusableElements = Array.from(modalRef.current.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button')).filter(el => !el.disabled);
+                const firstElement = focusableElements[0];
+                const lastElement = focusableElements[focusableElements.length - 1];
+                if (event.shiftKey) {
+                    if (document.activeElement === firstElement) {
+                        lastElement.focus();
+                        event.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastElement) {
+                        firstElement.focus();
+                        event.preventDefault();
+                    }
+                }
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+        return () => document.removeEventListener('keydown', handleKeyDown);
+    }
+}, [isForgotPasswordModalOpen]);
+
+
   const handlePasswordReset = (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetEmail) {
@@ -70,6 +103,7 @@ const LoginPage: React.FC = () => {
     }
     addToast(`If an account for ${resetEmail} exists, a reset link has been sent. (This is a demo)`, 'info');
     setIsForgotPasswordModalOpen(false);
+    forgotPasswordButtonRef.current?.focus();
     setResetEmail('');
   };
 
@@ -124,8 +158,8 @@ const LoginPage: React.FC = () => {
   const inputClass = (field: keyof typeof errors) => `
     block w-full rounded-md border bg-gray-50/50 p-3 text-black shadow-sm 
     transition-colors duration-200
-    placeholder:text-gray-400 focus:outline-none focus:ring-0
-    ${errors[field] || (field === 'email' && loginError) ? 'border-red-500 focus:border-red-500' : 'border-gray-300 focus:border-black'}
+    placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-1
+    ${errors[field] || (field === 'email' && loginError) ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'}
   `;
 
   return (
@@ -160,7 +194,7 @@ const LoginPage: React.FC = () => {
                           setErrors({});
                           setLoginError(null);
                         }}
-                        className="font-semibold text-black hover:underline ml-2 focus:outline-none"
+                        className="font-semibold text-black hover:underline ml-2 focus:outline-none focus:ring-2 focus:ring-black rounded"
                       >
                          {isLogin ? 'Create an account' : 'Sign in'}
                       </button>
@@ -215,7 +249,7 @@ const LoginPage: React.FC = () => {
                         placeholder="••••••••"
                         value={password} onChange={handleInputChange(setPassword, 'password')}
                       />
-                      <button type="button" className="absolute inset-y-0 right-0 flex items-center pr-3" onClick={() => setIsPasswordVisible(prev => !prev)} aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}>
+                      <button type="button" className="absolute inset-y-0 right-0 flex items-center pr-3 rounded-full" onClick={() => setIsPasswordVisible(prev => !prev)} aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}>
                         {isPasswordVisible ? (
                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-1.263-1.263a3 3 0 00-4.242 0M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         ) : (
@@ -229,11 +263,11 @@ const LoginPage: React.FC = () => {
                 {isLogin && (
                   <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 rounded border-gray-300 text-black focus:ring-0 focus:outline-none"/>
+                        <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 rounded border-gray-300 text-black focus:ring-black"/>
                         <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">Remember me</label>
                       </div>
                       <div className="text-sm">
-                          <button type="button" onClick={() => setIsForgotPasswordModalOpen(true)} className="font-medium text-gray-600 hover:text-black hover:underline focus:outline-none">
+                          <button ref={forgotPasswordButtonRef} type="button" onClick={() => setIsForgotPasswordModalOpen(true)} className="font-medium text-gray-600 hover:text-black hover:underline focus:outline-none focus:ring-2 focus:ring-black rounded">
                               Forgot your password?
                           </button>
                       </div>
@@ -255,14 +289,14 @@ const LoginPage: React.FC = () => {
       
       {isForgotPasswordModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setIsForgotPasswordModalOpen(false)}>
-          <div className="relative bg-white rounded-xl shadow-2xl p-8 w-full max-w-md m-4" onClick={(e) => e.stopPropagation()}>
-            <button onClick={() => setIsForgotPasswordModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors" aria-label="Close"><svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
-            <h2 className="text-2xl font-bold text-black mb-2">Reset Password</h2>
+          <div ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="forgot-password-title" className="relative bg-white rounded-xl shadow-2xl p-8 w-full max-w-md m-4" onClick={(e) => e.stopPropagation()}>
+            <button onClick={() => { setIsForgotPasswordModalOpen(false); forgotPasswordButtonRef.current?.focus(); }} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-black rounded-full" aria-label="Close"><svg className="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+            <h2 id="forgot-password-title" className="text-2xl font-bold text-black mb-2">Reset Password</h2>
             <p className="text-sm text-gray-600 mb-6">Enter your email and we'll send a link to get you back into your account.</p>
             <form onSubmit={handlePasswordReset}>
               <div>
                 <label htmlFor="reset-email" className="sr-only">Email address</label>
-                <input id="reset-email" name="email" type="email" autoComplete="email" required value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} className="appearance-none relative block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-500 text-black focus:outline-none focus:ring-0 focus:border-black sm:text-sm" placeholder="Email address" />
+                <input ref={resetEmailInputRef} id="reset-email" name="email" type="email" autoComplete="email" required value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} className="appearance-none relative block w-full px-3 py-3 border border-gray-300 rounded-md placeholder-gray-500 text-black focus:outline-none focus:ring-2 focus:ring-black sm:text-sm" placeholder="Email address" />
               </div>
               <div className="mt-6">
                 <button type="submit" className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors">

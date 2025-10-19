@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Product, Review } from '../types';
 import { useCart, useWishlist } from '../App';
@@ -38,6 +38,8 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [addToCartError, setAddToCartError] = useState<string | null>(null);
   const [addToCartState, setAddToCartState] = useState<'idle' | 'success'>('idle');
+  
+  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
 
   const colorMap: { [key: string]: string } = {
@@ -69,6 +71,24 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
     if (!product) return;
     setCurrentImageIndex((prevIndex) => (prevIndex - 1 + product.imageUrls.length) % product.imageUrls.length);
   }, [product]);
+  
+  const handleTabKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let newIndex = index;
+    if (e.key === 'ArrowRight') {
+      newIndex = (index + 1) % tabRefs.current.length;
+    } else if (e.key === 'ArrowLeft') {
+      newIndex = (index - 1 + tabRefs.current.length) % tabRefs.current.length;
+    }
+
+    if (newIndex !== index) {
+      const newTab = tabRefs.current[newIndex];
+      if (newTab) {
+        newTab.focus();
+        newTab.click();
+      }
+    }
+  };
+
 
   if (!product) {
     return <div className="text-center py-20">Product not found.</div>;
@@ -132,10 +152,18 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
 
   const currentImageUrl = product.imageUrls[currentImageIndex];
 
-  const TabButton: React.FC<{tabName: 'details' | 'reviews'; label: string}> = ({ tabName, label }) => (
+  const TabButton: React.FC<{tabName: 'details' | 'reviews'; label: string; index: number;}> = ({ tabName, label, index }) => (
       <button
+        // FIX: Ref callbacks should not return a value. Wrapped assignment in braces to create a statement block.
+        ref={(el) => { tabRefs.current[index] = el; }}
+        id={`tab-${tabName}`}
+        role="tab"
+        aria-controls={`tabpanel-${tabName}`}
+        aria-selected={activeTab === tabName}
+        tabIndex={activeTab === tabName ? 0 : -1}
         onClick={() => setActiveTab(tabName)}
-        className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors ${
+        onKeyDown={(e) => handleTabKeyDown(e, index)}
+        className={`py-4 px-1 text-sm font-medium border-b-2 transition-colors rounded-t-md focus:outline-none focus:ring-2 focus:ring-black ${
           activeTab === tabName
             ? 'border-black text-black'
             : 'border-transparent text-gray-500 hover:border-gray-400 hover:text-gray-700'
@@ -174,7 +202,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
                     <button
                         onClick={handlePrevImage}
                         aria-label="Previous image"
-                        className="absolute top-1/2 left-3 -translate-y-1/2 bg-white/50 p-2 rounded-full text-black hover:bg-white/80 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-0"
+                        className="absolute top-1/2 left-3 -translate-y-1/2 bg-white/50 p-2 rounded-full text-black hover:bg-white/80 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-0 focus:outline-none focus:ring-2 focus:ring-black"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -183,7 +211,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
                     <button
                         onClick={handleNextImage}
                         aria-label="Next image"
-                        className="absolute top-1/2 right-3 -translate-y-1/2 bg-white/50 p-2 rounded-full text-black hover:bg-white/80 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-0"
+                        className="absolute top-1/2 right-3 -translate-y-1/2 bg-white/50 p-2 rounded-full text-black hover:bg-white/80 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100 disabled:opacity-0 focus:outline-none focus:ring-2 focus:ring-black"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -225,8 +253,9 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
                         e.preventDefault(); 
                         setActiveTab('reviews'); 
                         document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' }); 
+                        tabRefs.current[1]?.focus();
                       }} 
-                      className="ml-3 text-sm font-medium text-black hover:underline"
+                      className="ml-3 text-sm font-medium text-black hover:underline focus:outline-none focus:ring-2 focus:ring-black rounded"
                     >
                         {reviews.length} review{reviews.length > 1 ? 's' : ''}
                     </a>
@@ -259,7 +288,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
                     {product.sizes.map((size) => (
                       <label
                         key={size}
-                        className={`group relative border rounded-md py-3 px-4 flex items-center justify-center text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none cursor-pointer transition-colors ${
+                        className={`group relative border rounded-md py-3 px-4 flex items-center justify-center text-sm font-medium uppercase hover:bg-gray-50 focus-within:ring-2 focus-within:ring-black cursor-pointer transition-colors ${
                           selectedSize === size
                             ? 'bg-black text-white border-black'
                             : 'bg-white text-black border-gray-200'
@@ -308,7 +337,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
                         onClick={handleWishlistToggle}
                         type="button"
                         aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                        className={`flex-shrink-0 h-auto w-14 flex items-center justify-center rounded-md border transition-all duration-200 ease-in-out transform active:scale-95 ${isInWishlist ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-300 text-black hover:bg-gray-100'}`}
+                        className={`flex-shrink-0 h-auto w-14 flex items-center justify-center rounded-md border transition-all duration-200 ease-in-out transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-black ${isInWishlist ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-300 text-black hover:bg-gray-100'}`}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill={isInWishlist ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -334,7 +363,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
                     href={`https://api.whatsapp.com/send?text=Check%20out%20this%20XOID%20tee%3A%20${encodeURIComponent(product.name)}%20-%20${encodeURIComponent(window.location.href)}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="text-gray-500 hover:text-black transition-colors"
+                    className="text-gray-500 hover:text-black transition-colors p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-black"
                     aria-label="Share on WhatsApp"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
@@ -348,7 +377,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
                             navigator.clipboard.writeText(window.location.href);
                             addToast('Link copied to clipboard!');
                         }}
-                        className="text-gray-500 hover:text-black transition-colors"
+                        className="text-gray-500 hover:text-black transition-colors p-1 rounded-full focus:outline-none focus:ring-2 focus:ring-black"
                         aria-label="Copy product link"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -362,43 +391,53 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
           {/* Tabs Section */}
             <div className="mt-12" id="reviews-section">
                 <div className="border-b border-gray-200">
-                    <div className="-mb-px flex space-x-8" aria-label="Tabs">
-                        <TabButton tabName="details" label="Details & Fit" />
-                        <TabButton tabName="reviews" label={`Reviews (${reviews.length})`} />
+                    <div role="tablist" aria-label="Product details and reviews" className="-mb-px flex space-x-8">
+                        <TabButton tabName="details" label="Details & Fit" index={0} />
+                        <TabButton tabName="reviews" label={`Reviews (${reviews.length})`} index={1} />
                     </div>
                 </div>
                 <div className="mt-8">
-                    {activeTab === 'details' && (
-                        <div>
-                            <h3 className="text-xl font-semibold text-black">Description</h3>
-                            <div className="mt-4 prose text-gray-600 max-w-none">
-                                <p>{product.description}</p>
-                            </div>
-                            <div className="mt-8">
-                                <h3 className="text-xl font-semibold text-black">Fit & Sizing</h3>
-                                <ul className="mt-4 list-disc list-inside text-gray-600 space-y-2">
-                                    <li>Designed for a deliberately oversized fit.</li>
-                                    <li>Dropped shoulders for a relaxed silhouette.</li>
-                                    <li>Consider sizing down for a closer fit.</li>
-                                </ul>
-                            </div>
-                            <div className="mt-8">
-                                <h3 className="text-xl font-semibold text-black">Fabric & Care</h3>
-                                <ul className="mt-4 list-disc list-inside text-gray-600 space-y-2">
-                                    <li>Material: {product.material}</li>
-                                    <li>Machine wash cold, inside out.</li>
-                                    <li>Tumble dry low or hang dry to preserve quality.</li>
-                                    <li>Do not iron directly on graphics.</li>
-                                </ul>
-                            </div>
+                    <div
+                        id="tabpanel-details"
+                        role="tabpanel"
+                        aria-labelledby="tab-details"
+                        tabIndex={0}
+                        hidden={activeTab !== 'details'}
+                        className="focus:outline-none focus:ring-2 focus:ring-black rounded-md"
+                    >
+                        <h3 className="text-xl font-semibold text-black">Description</h3>
+                        <div className="mt-4 prose text-gray-600 max-w-none">
+                            <p>{product.description}</p>
                         </div>
-                    )}
-                    {activeTab === 'reviews' && (
-                        <div>
-                            <ProductReviews reviews={reviews} />
-                            <ReviewForm onSubmit={handleAddReview} />
+                        <div className="mt-8">
+                            <h3 className="text-xl font-semibold text-black">Fit & Sizing</h3>
+                            <ul className="mt-4 list-disc list-inside text-gray-600 space-y-2">
+                                <li>Designed for a deliberately oversized fit.</li>
+                                <li>Dropped shoulders for a relaxed silhouette.</li>
+                                <li>Consider sizing down for a closer fit.</li>
+                            </ul>
                         </div>
-                    )}
+                        <div className="mt-8">
+                            <h3 className="text-xl font-semibold text-black">Fabric & Care</h3>
+                            <ul className="mt-4 list-disc list-inside text-gray-600 space-y-2">
+                                <li>Material: {product.material}</li>
+                                <li>Machine wash cold, inside out.</li>
+                                <li>Tumble dry low or hang dry to preserve quality.</li>
+                                <li>Do not iron directly on graphics.</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div
+                        id="tabpanel-reviews"
+                        role="tabpanel"
+                        aria-labelledby="tab-reviews"
+                        tabIndex={0}
+                        hidden={activeTab !== 'reviews'}
+                        className="focus:outline-none focus:ring-2 focus:ring-black rounded-md"
+                    >
+                        <ProductReviews reviews={reviews} />
+                        <ReviewForm onSubmit={handleAddReview} />
+                    </div>
                 </div>
             </div>
         </div>
