@@ -26,6 +26,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [addToCartState, setAddToCartState] = useState<'idle' | 'success'>('idle');
+
 
   const isInWishlist = isProductInWishlist(product.id);
 
@@ -34,9 +36,15 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
       setError('Please select a size.');
       return;
     }
+    if (addToCartState === 'success') return;
+
     setError(null);
     addToCart(product, quantity, selectedSize);
-    onClose();
+    setAddToCartState('success');
+    
+    setTimeout(() => {
+      onClose();
+    }, 1500);
   };
   
   const handleWishlistToggle = () => {
@@ -186,16 +194,24 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
             <div className="flex gap-4">
                  <button
                   onClick={handleAddToCart}
-                  disabled={isOutOfStock}
-                  className="flex-1 w-full h-12 bg-black text-white font-bold px-6 rounded-md hover:bg-gray-800 transition-colors flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={isOutOfStock || addToCartState === 'success'}
+                  className="relative flex-1 w-full h-12 bg-black text-white font-bold px-6 rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out transform active:scale-95 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed overflow-hidden"
                 >
-                  {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                  <span className={`transition-transform duration-300 ease-in-out flex items-center justify-center ${addToCartState === 'idle' ? 'translate-y-0' : '-translate-y-12'}`}>
+                     {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+                  </span>
+                  <span className={`absolute inset-0 flex items-center justify-center transition-transform duration-300 ease-in-out ${addToCartState === 'success' ? 'translate-y-0' : 'translate-y-12'}`}>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Added!
+                  </span>
                 </button>
                  <button
                     onClick={handleWishlistToggle}
                     type="button"
                     aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                    className={`flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-md border transition-colors active:scale-95 ${isInWishlist ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-300 text-black hover:bg-gray-100'}`}
+                    className={`flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-md border transition-all duration-200 ease-in-out transform active:scale-95 ${isInWishlist ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-300 text-black hover:bg-gray-100'}`}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill={isInWishlist ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />

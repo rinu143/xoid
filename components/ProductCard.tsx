@@ -75,7 +75,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickViewClick }) 
             {/* Quick View Button */}
             <button
               onClick={handleButtonClick}
-              className="w-full bg-white text-black font-bold py-3 px-8 rounded-md opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 ease-in-out"
+              className="w-full bg-white text-black font-bold py-3 px-8 rounded-md opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 ease-in-out active:scale-95"
               aria-label={`Quick view for ${product.name}`}
             >
               Quick View

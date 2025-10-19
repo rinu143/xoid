@@ -127,7 +127,7 @@ const CartPage: React.FC = () => {
             <div className="mt-6">
               <Link
                 to="/checkout"
-                className="w-full bg-black border border-transparent rounded-md shadow-sm py-4 px-4 text-base font-bold text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-black flex items-center justify-center transition-colors"
+                className="w-full bg-black border border-transparent rounded-md shadow-sm py-4 px-4 text-base font-bold text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 focus:ring-black flex items-center justify-center transition-all duration-200 transform active:scale-95"
               >
                 Proceed to Checkout
               </Link>

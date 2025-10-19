@@ -28,7 +28,7 @@ const HomePage: React.FC = () => {
           </p>
           <Link
             to="/shop"
-            className="mt-8 inline-block bg-white text-black border-2 border-white font-bold py-3 px-10 rounded-md hover:bg-transparent hover:text-white transition-all duration-300"
+            className="mt-8 inline-block bg-white text-black border-2 border-white font-bold py-3 px-10 rounded-md hover:bg-transparent hover:text-white transition-all duration-300 transform active:scale-95"
           >
             Shop Collection
           </Link>
@@ -46,7 +46,7 @@ const HomePage: React.FC = () => {
         <div className="mt-12 text-center">
           <Link
             to="/shop"
-            className="inline-block bg-white text-black border border-black font-bold py-3 px-10 rounded-md hover:bg-black hover:text-white transition-all duration-300"
+            className="inline-block bg-white text-black border border-black font-bold py-3 px-10 rounded-md hover:bg-black hover:text-white transition-all duration-300 transform active:scale-95"
           >
             View All
           </Link>
