@@ -1,13 +1,14 @@
 import React from 'react';
 import { Product } from '../types';
 import ProductCard from './ProductCard';
+import { useProducts } from '../App';
 
 interface SimilarProductsProps {
-  products: Product[];
   currentProductId: number;
 }
 
-const SimilarProducts: React.FC<SimilarProductsProps> = ({ products, currentProductId }) => {
+const SimilarProducts: React.FC<SimilarProductsProps> = ({ currentProductId }) => {
+  const { products } = useProducts();
   // A simple logic: show other products, excluding the current one.
   const similar = products.filter(p => p.id !== currentProductId).slice(0, 4);
 

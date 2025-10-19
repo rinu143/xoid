@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { useWishlist } from '../App';
-import { products } from '../data/products';
+import { useWishlist, useProducts } from '../App';
 import ProductCard from '../components/ProductCard';
 
 interface WishlistPageProps {
@@ -10,6 +9,7 @@ interface WishlistPageProps {
 
 const WishlistPage: React.FC<WishlistPageProps> = ({ showTitle = true }) => {
   const { wishlist } = useWishlist();
+  const { products } = useProducts();
   const wishlistedProducts = products.filter(product => wishlist.includes(product.id));
 
   return (

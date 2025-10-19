@@ -54,7 +54,8 @@ const CartPage: React.FC = () => {
                           </h3>
                         </div>
                         <div className="mt-1 flex text-sm">
-                          <p className="text-gray-500">{product.color}</p>
+                          {/* FIX: Changed product.color to product.colors[0] to correctly display the first color from the array. */}
+                          <p className="text-gray-500">{product.colors[0]}</p>
                            {product.size && (
                             <p className="ml-4 pl-4 border-l border-gray-200 text-gray-500">Size: {product.size}</p>
                           )}

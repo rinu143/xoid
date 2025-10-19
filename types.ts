@@ -1,10 +1,14 @@
+import { Product as ProductType } from './types';
+// FIX: Removed incorrect import of CartItem from './App' which was causing a circular dependency. The CartItem interface is defined within this file.
+
 export interface Product {
   id: number;
   name: string;
   price: number;
   imageUrls: string[];
   description: string;
-  color: string;
+  colors: string[];
+  keywords: string[];
   material: string;
   sizeStock: { [key: string]: number };
   stock: number; // Total stock
@@ -38,4 +42,22 @@ export interface Address {
   country: string;
   phone: string;
   isDefault: boolean;
+}
+
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    password?: string;
+    addresses: Address[];
+    role?: 'admin' | 'customer';
+}
+
+export interface Order {
+  id: string;
+  date: string;
+  customer: string;
+  total: string;
+  status: 'Shipped' | 'Delivered' | 'Processing';
+  items: CartItem[];
 }

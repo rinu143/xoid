@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Product } from '../types';
-import { products } from '../data/products';
+// FIX: Corrected import to use the exported `productsData` and aliased it as `products`.
+import { productsData as products } from '../data/products';
 import VirtualTryOn from '../components/VirtualTryOn';
 
 // A new component for the product selection card for a cleaner structure

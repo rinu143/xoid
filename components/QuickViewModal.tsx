@@ -125,7 +125,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
             <div className="mt-6">
                  <h3 className="text-sm font-medium text-black">Details</h3>
                  <div className="mt-2 flex flex-col text-sm text-gray-600 space-y-1">
-                     <span>Color: {product.color}</span>
+                     <span>Color: {product.colors.join(', ')}</span>
                      <span>Material: {product.material}</span>
                  </div>
             </div>

@@ -1,18 +1,13 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Product, Review } from '../types';
-import { useCart, useWishlist } from '../App';
+import { useCart, useWishlist, useProducts } from '../App';
 import { reviews as allReviews } from '../data/reviews';
 import ProductReviews from '../components/ProductReviews';
 import ReviewForm from '../components/ReviewForm';
 import SimilarProducts from '../components/SimilarProducts';
 import { useToast } from '../components/ToastProvider';
 import StarRating from '../components/StarRating';
-
-// FIX: Define props interface for ProductPage component
-interface ProductPageProps {
-  products: Product[];
-}
 
 const SizeStockDisplay: React.FC<{ stock: number }> = ({ stock }) => {
   if (stock === 0) {
@@ -24,8 +19,9 @@ const SizeStockDisplay: React.FC<{ stock: number }> = ({ stock }) => {
   return <p className="text-sm font-bold text-green-600">In Stock</p>;
 };
 
-const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
+const ProductPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { products } = useProducts();
   const { addToCart, buyNow } = useCart();
   const { isProductInWishlist, addToWishlist, removeFromWishlist } = useWishlist();
   const { addToast } = useToast();
@@ -239,12 +235,15 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
 
            <div className="mt-6 border-t border-gray-200 pt-6">
              <h3 className="text-sm font-medium text-black">Color</h3>
-             <div className="mt-2">
-                <span
-                    className="h-8 w-8 rounded-full border-2 border-black block"
-                    style={{ backgroundColor: colorMap[product.color] || product.color.toLowerCase() }}
-                    title={product.color}
-                ></span>
+             <div className="mt-2 flex items-center gap-2">
+                {product.colors.map(color => (
+                    <span
+                        key={color}
+                        className="h-8 w-8 rounded-full border-2 border-black block"
+                        style={{ backgroundColor: colorMap[color] || color.toLowerCase() }}
+                        title={color}
+                    ></span>
+                ))}
              </div>
            </div>
 
@@ -431,7 +430,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
         </div>
       </div>
 
-      <SimilarProducts products={products} currentProductId={product.id} />
+      <SimilarProducts currentProductId={product.id} />
     </div>
   );
 };

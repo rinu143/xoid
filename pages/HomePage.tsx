@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import { products } from '../data/products';
+import { useProducts } from '../App';
 
 const HomePage: React.FC = () => {
+  const { products } = useProducts();
   const featuredProducts = products.slice(0, 4);
 
   return (

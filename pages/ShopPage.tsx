@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { products } from '../data/products';
+import { useProducts } from '../App';
 import ProductCard from '../components/ProductCard';
 import Filters from '../components/Filters';
 import { Product } from '../types';
@@ -20,6 +20,7 @@ const priceRanges = [
 ];
 
 const ShopPage: React.FC = () => {
+  const { products } = useProducts();
   const [filters, setFilters] = useState<FiltersState>({
     price: '',
     colors: [],
@@ -29,14 +30,14 @@ const ShopPage: React.FC = () => {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
 
-  const availableColors = useMemo(() => Array.from(new Set(products.map(p => p.color))), []);
+  const availableColors = useMemo(() => Array.from(new Set(products.flatMap(p => p.colors))), [products]);
   const availableSizes = useMemo(() => {
     const allSizes = products.flatMap(p => p.sizes);
     const uniqueSizes = Array.from(new Set(allSizes));
     const sortOrder = ['S', 'M', 'L', 'XL'];
     uniqueSizes.sort((a, b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
     return uniqueSizes;
-  }, []);
+  }, [products]);
 
   const sortedAndFilteredProducts = useMemo(() => {
     let productsToDisplay = products.filter(product => {
@@ -48,7 +49,7 @@ const ShopPage: React.FC = () => {
         }
       }
       // Color filter
-      if (filters.colors.length > 0 && !filters.colors.includes(product.color)) {
+      if (filters.colors.length > 0 && !filters.colors.some(c => product.colors.includes(c))) {
         return false;
       }
       // Size filter
@@ -75,7 +76,7 @@ const ShopPage: React.FC = () => {
 
     return productsToDisplay;
 
-  }, [filters, sortBy]);
+  }, [filters, sortBy, products]);
 
   const handleFilterChange = (newFilters: Partial<FiltersState>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));

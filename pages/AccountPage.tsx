@@ -4,11 +4,7 @@ import { useAuth } from '../App';
 import { useToast } from '../components/ToastProvider';
 import { Address } from '../types';
 import WishlistPage from './WishlistPage';
-
-const mockOrders = [
-  { id: 'Z01D-78923', date: 'July 25, 2024', total: '$275.00', status: 'Shipped', items: ['Void Echo Tee', 'Chrome Fragment Tee'] },
-  { id: 'Z01D-54198', date: 'June 12, 2024', total: '$120.00', status: 'Delivered', items: ['Noir Canvas Tee'] },
-];
+import { mockOrders } from '../data/orders';
 
 const indianStates = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
@@ -122,7 +118,8 @@ const OverviewView: React.FC<{ user: { name: string; email: string }, onNavigate
 const StatusBadge: React.FC<{ status: string }> = ({ status }) => {
     const statusClasses = status === 'Shipped'
         ? { dot: 'bg-blue-500', text: 'text-blue-700' }
-        : { dot: 'bg-green-500', text: 'text-green-700' };
+        : status === 'Delivered' ? { dot: 'bg-green-500', text: 'text-green-700' }
+        : { dot: 'bg-yellow-500', text: 'text-yellow-700' };
 
     return (
         <div className="inline-flex items-center gap-2">

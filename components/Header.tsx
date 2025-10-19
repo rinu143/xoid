@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import { useCart } from '../App';
-import { useAuth } from '../App';
-import { useWishlist } from '../App';
-import { products } from '../data/products';
+import { useCart, useAuth, useWishlist, useProducts } from '../App';
 import { Product } from '../types';
 
 // --- Search Modal Component ---
@@ -27,12 +24,13 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [results, setResults] = useState<Product[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { products } = useProducts();
 
-  const availableColors = useMemo(() => Array.from(new Set(products.map(p => p.color))), []);
+  const availableColors = useMemo(() => Array.from(new Set(products.flatMap(p => p.colors))), [products]);
   const availableSizes = useMemo(() => {
     const allSizes = products.flatMap(p => p.sizes);
     return ['S', 'M', 'L', 'XL'].filter(size => allSizes.includes(size));
-  }, []);
+  }, [products]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -51,14 +49,16 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
     const lowerCaseQuery = query.toLowerCase();
     const filtered = products.filter(product => {
       const queryMatch = query.trim().length > 1
-        ? product.name.toLowerCase().includes(lowerCaseQuery) || product.description.toLowerCase().includes(lowerCaseQuery)
+        ? product.name.toLowerCase().includes(lowerCaseQuery) || 
+          product.description.toLowerCase().includes(lowerCaseQuery) ||
+          product.keywords.some(k => k.toLowerCase().includes(lowerCaseQuery))
         : true;
-      const colorMatch = selectedColors.length > 0 ? selectedColors.includes(product.color) : true;
+      const colorMatch = selectedColors.length > 0 ? selectedColors.some(c => product.colors.includes(c)) : true;
       const sizeMatch = selectedSizes.length > 0 ? selectedSizes.some(size => product.sizes.includes(size)) : true;
       return queryMatch && colorMatch && sizeMatch;
     });
     setResults(filtered);
-  }, [query, selectedColors, selectedSizes]);
+  }, [query, selectedColors, selectedSizes, products]);
 
   const handleColorToggle = (color: string) => {
     setSelectedColors(prev => prev.includes(color) ? prev.filter(c => c !== color) : [...prev, color]);
@@ -192,7 +192,7 @@ const NavItem: React.FC<{ to: string; children: React.ReactNode }> = ({ to, chil
 
 const Header: React.FC = () => {
   const { itemCount } = useCart();
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, isAdmin } = useAuth();
   const { wishlist } = useWishlist();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -220,6 +220,7 @@ const Header: React.FC = () => {
               <div className="ml-10 flex items-baseline space-x-8">
                 <NavItem to="/">Home</NavItem>
                 <NavItem to="/shop">Shop</NavItem>
+                {isAdmin && <NavItem to="/admin">Admin</NavItem>}
               </div>
             </div>
             <div className="flex items-center space-x-6">

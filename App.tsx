@@ -1,7 +1,8 @@
 import React, { useState, createContext, useContext, useCallback } from 'react';
-import { HashRouter, Routes, Route, Link, useParams, useLocation, useNavigate } from 'react-router-dom';
-import { CartItem, Product, Address } from './types';
-import { products } from './data/products';
+import { HashRouter, Routes, Route, Link, useParams, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { CartItem, Product, Address, User } from './types';
+import { productsData } from './data/products';
+import { usersData } from './data/users';
 import HomePage from './pages/HomePage';
 import ShopPage from './pages/ShopPage';
 import ProductPage from './pages/ProductPage';
@@ -16,6 +17,38 @@ import ProtectedRoute from './components/ProtectedRoute';
 import BackToTopButton from './components/BackToTopButton';
 import WishlistPage from './pages/WishlistPage';
 import HelpWidget from './components/HelpWidget';
+import AdminPage from './pages/admin/AdminPage';
+
+// Product Context
+interface ProductContextType {
+  products: Product[];
+  addProduct: (product: Omit<Product, 'id'>) => void;
+}
+const ProductContext = createContext<ProductContextType | null>(null);
+export const useProducts = () => {
+  const context = useContext(ProductContext);
+  if (!context) throw new Error('useProducts must be used within a ProductProvider');
+  return context;
+};
+
+const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [products, setProducts] = useState<Product[]>(productsData);
+  
+  const addProduct = (newProductData: Omit<Product, 'id'>) => {
+    const newProduct: Product = {
+      ...newProductData,
+      id: Date.now(), // Simple unique ID generation
+    };
+    setProducts(prev => [newProduct, ...prev]);
+  };
+
+  return (
+    <ProductContext.Provider value={{ products, addProduct }}>
+      {children}
+    </ProductContext.Provider>
+  );
+};
+
 
 // Cart Context
 interface CartContextType {
@@ -57,19 +90,16 @@ export const useWishlist = () => {
 };
 
 // Auth Context
-interface User {
-    name: string;
-    email: string;
-    password?: string;
-    addresses: Address[];
-}
-
 interface AuthContextType {
   isLoggedIn: boolean;
+  isAdmin: boolean;
   user: User | null;
+  users: User[];
   login: (email: string, password: string) => boolean;
   logout: () => void;
-  updateUser: (details: { name?: string; email?: string }) => void;
+  // FIX: Updated `updateUser` to accept a Partial<User> to allow updating any user property, including addresses.
+  updateUser: (details: Partial<User>) => void;
+  updateUserRole: (userId: string, role: 'admin' | 'customer') => void;
   changePassword: (currentPassword: string, newPassword: string) => boolean;
   addAddress: (address: Omit<Address, 'id'>) => void;
   updateAddress: (address: Address) => void;
@@ -91,104 +121,108 @@ export const useAuth = () => {
 };
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [loggedInUser, setLoggedInUser] = useState<User | null>(null);
+  const [users, setUsers] = useState<User[]>(usersData);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   const login = (email: string, password: string): boolean => {
-    // Mock credentials
-    if (email.toLowerCase() === 'admin@gmail.com' && password === 'admin123') {
-      setIsLoggedIn(true);
-      setUser({ name: 'John Doe', email: 'admin@gmail.com', password: 'admin123', addresses: [] });
-      
+    const foundUser = users.find(
+        u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+    );
+    
+    if (foundUser) {
+        setLoggedInUser(foundUser);
       if (pendingAction) {
         pendingAction();
-        setPendingAction(null); // Clear action after execution
+        setPendingAction(null);
       }
-
       return true;
     }
     return false;
   };
 
   const logout = () => {
-    setIsLoggedIn(false);
-    setUser(null);
+    setLoggedInUser(null);
   };
   
-  const updateUser = (details: { name?: string; email?: string }) => {
-    if (user) {
-      setUser(prevUser => ({ ...prevUser!, ...details }));
+  // FIX: Updated `updateUser` signature to match the context type.
+  const updateUser = (details: Partial<User>) => {
+    if (loggedInUser) {
+        const updatedUser = { ...loggedInUser, ...details };
+        setLoggedInUser(updatedUser);
+        setUsers(prev => prev.map(u => u.id === loggedInUser.id ? updatedUser : u));
     }
   };
+  
+  const updateUserRole = (userId: string, role: 'admin' | 'customer') => {
+    setUsers(prevUsers => prevUsers.map(u => u.id === userId ? { ...u, role } : u));
+  };
+
 
   const changePassword = (currentPassword: string, newPassword: string): boolean => {
-    if (user && user.password === currentPassword) {
-        setUser(prevUser => ({ ...prevUser!, password: newPassword }));
+    if (loggedInUser && loggedInUser.password === currentPassword) {
+        const updatedUser = { ...loggedInUser, password: newPassword };
+        setLoggedInUser(updatedUser);
+        setUsers(prev => prev.map(u => u.id === loggedInUser.id ? updatedUser : u));
         return true;
     }
     return false;
   };
   
   const addAddress = (address: Omit<Address, 'id'>) => {
-    setUser(prevUser => {
-      if (!prevUser) return null;
-      const newAddress: Address = { ...address, id: Date.now().toString() };
-      let newAddresses = [...prevUser.addresses, newAddress];
-      // If the new address is set as default, unset the old default
-      if (newAddress.isDefault) {
-        newAddresses = newAddresses.map(a => 
-          a.id === newAddress.id ? a : { ...a, isDefault: false }
-        );
-      } else if (newAddresses.length === 1) {
-        // If it's the first address, make it default
-        newAddresses[0].isDefault = true;
-      }
-      return { ...prevUser, addresses: newAddresses };
-    });
+    if (!loggedInUser) return;
+    const newAddress: Address = { ...address, id: Date.now().toString() };
+    let newAddresses = [...loggedInUser.addresses, newAddress];
+    if (newAddress.isDefault) {
+      newAddresses = newAddresses.map(a => 
+        a.id === newAddress.id ? a : { ...a, isDefault: false }
+      );
+    } else if (newAddresses.length === 1) {
+      newAddresses[0].isDefault = true;
+    }
+    // FIX: Simplified call to updateUser, passing only the changed properties.
+    updateUser({ addresses: newAddresses });
   };
 
   const updateAddress = (updatedAddress: Address) => {
-    setUser(prevUser => {
-      if (!prevUser) return null;
-      let newAddresses = prevUser.addresses.map(a => 
-        a.id === updatedAddress.id ? updatedAddress : a
+    if (!loggedInUser) return;
+    let newAddresses = loggedInUser.addresses.map(a => 
+      a.id === updatedAddress.id ? updatedAddress : a
+    );
+    if (updatedAddress.isDefault) {
+      newAddresses = newAddresses.map(a => 
+        a.id === updatedAddress.id ? a : { ...a, isDefault: false }
       );
-      // If the updated address is set as default, unset the old default
-      if (updatedAddress.isDefault) {
-        newAddresses = newAddresses.map(a => 
-          a.id === updatedAddress.id ? a : { ...a, isDefault: false }
-        );
-      }
-      return { ...prevUser, addresses: newAddresses };
-    });
+    }
+    // FIX: Simplified call to updateUser, passing only the changed properties.
+    updateUser({ addresses: newAddresses });
   };
 
   const deleteAddress = (addressId: string) => {
-    setUser(prevUser => {
-      if (!prevUser) return null;
-      let remainingAddresses = prevUser.addresses.filter(a => a.id !== addressId);
-      const wasDefault = prevUser.addresses.find(a => a.id === addressId)?.isDefault;
-      // If the deleted address was the default and there are others left, make the first one the new default
-      if (wasDefault && remainingAddresses.length > 0) {
-        remainingAddresses[0] = { ...remainingAddresses[0], isDefault: true };
-      }
-      return { ...prevUser, addresses: remainingAddresses };
-    });
+    if (!loggedInUser) return;
+    let remainingAddresses = loggedInUser.addresses.filter(a => a.id !== addressId);
+    const wasDefault = loggedInUser.addresses.find(a => a.id === addressId)?.isDefault;
+    if (wasDefault && remainingAddresses.length > 0) {
+      remainingAddresses[0] = { ...remainingAddresses[0], isDefault: true };
+    }
+    // FIX: Simplified call to updateUser, passing only the changed properties.
+    updateUser({ addresses: remainingAddresses });
   };
 
   const setDefaultAddress = (addressId: string) => {
-    setUser(prevUser => {
-      if (!prevUser) return null;
-      const newAddresses = prevUser.addresses.map(a => ({
-        ...a,
-        isDefault: a.id === addressId
-      }));
-      return { ...prevUser, addresses: newAddresses };
-    });
+    if (!loggedInUser) return;
+    const newAddresses = loggedInUser.addresses.map(a => ({
+      ...a,
+      isDefault: a.id === addressId
+    }));
+    // FIX: Simplified call to updateUser, passing only the changed properties.
+    updateUser({ addresses: newAddresses });
   };
+  
+  const isLoggedIn = !!loggedInUser;
+  const isAdmin = loggedInUser?.role === 'admin';
 
-  const value = { isLoggedIn, user, login, logout, updateUser, changePassword, addAddress, updateAddress, deleteAddress, setDefaultAddress, pendingAction, setPendingAction };
+  const value = { isLoggedIn, isAdmin, user: loggedInUser, users, login, logout, updateUser, updateUserRole, changePassword, addAddress, updateAddress, deleteAddress, setDefaultAddress, pendingAction, setPendingAction };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
@@ -197,6 +231,7 @@ const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children })
     const [wishlist, setWishlist] = useState<number[]>([]);
     const { addToast } = useToast();
     const { isLoggedIn, setPendingAction } = useAuth();
+    const { products } = useProducts();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -204,7 +239,7 @@ const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         setWishlist(prev => [...prev, productId]);
         const product = products.find(p => p.id === productId);
         addToast(`${product?.name || 'Item'} added to wishlist!`);
-    }, [addToast]);
+    }, [addToast, products]);
     
     const addToWishlist = useCallback((productId: number) => {
         if (isLoggedIn) {
@@ -220,7 +255,7 @@ const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children })
         setWishlist(prev => prev.filter(id => id !== productId));
         const product = products.find(p => p.id === productId);
         addToast(`${product?.name || 'Item'} removed from wishlist.`, 'info');
-    }, [addToast]);
+    }, [addToast, products]);
 
     const isProductInWishlist = useCallback((productId: number) => {
         return wishlist.includes(productId);
@@ -236,6 +271,7 @@ const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [cart, setCart] = useState<CartItem[]>([]);
   const { addToast } = useToast();
   const { isLoggedIn, setPendingAction } = useAuth();
+  const { products } = useProducts();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -265,7 +301,7 @@ const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     });
     
     addToast(`${product.name} added to cart.`);
-  }, [cart, addToast]);
+  }, [cart, addToast, products]);
 
   const addToCart = useCallback((product: Product, quantity: number, size: string) => {
     if (isLoggedIn) {
@@ -275,7 +311,6 @@ const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       setPendingAction(() => () => {
         _performAddToCart(product, quantity, size);
       });
-       // Navigate to an intermediary protected route that will show the redirecting component
       navigate('/login-required', { state: { from: location }, replace: true });
     }
   }, [isLoggedIn, _performAddToCart, setPendingAction, navigate, location, addToast]);
@@ -285,14 +320,12 @@ const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   }, []);
 
   const buyNow = useCallback((product: Product, quantity: number, size: string) => {
-    // Action for already logged-in users
     const performBuyNowForLoggedInUser = () => {
         clearCart();
         _performAddToCart(product, quantity, size);
         navigate('/checkout');
     };
 
-    // Action for guest users after they log in (without navigation)
     const pendingBuyNowAction = () => {
         clearCart();
         _performAddToCart(product, quantity, size);
@@ -303,9 +336,6 @@ const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     } else {
         addToast('Please sign in to buy now.', 'info');
         setPendingAction(() => pendingBuyNowAction);
-        // Navigate to the protected checkout route.
-        // This will show the Redirecting component, then the login page.
-        // After login, the user will be redirected to '/checkout' automatically.
         navigate('/checkout');
     }
 }, [isLoggedIn, clearCart, _performAddToCart, navigate, setPendingAction, addToast]);
@@ -344,7 +374,7 @@ const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       );
       addToast('Cart updated.', 'info');
     }
-  }, [cart, removeFromCart, addToast]);
+  }, [cart, removeFromCart, addToast, products]);
 
   const itemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
@@ -353,63 +383,80 @@ const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
 
+const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const { isLoggedIn, isAdmin } = useAuth();
+    if (!isLoggedIn || !isAdmin) {
+        return <Navigate to="/" replace />;
+    }
+    return <>{children}</>;
+};
+
 const App: React.FC = () => {
   return (
     <ToastProvider>
       <HashRouter>
         <AuthProvider>
-          <WishlistProvider>
-            <CartProvider>
-              <div className="flex flex-col min-h-screen bg-white text-gray-800">
-                <Header />
-                <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/shop" element={<ShopPage />} />
-                    <Route path="/product/:id" element={<ProductPage products={products}/>} />
-                    <Route path="/cart" element={<CartPage />} />
-                    <Route 
-                      path="/checkout"
-                      element={
-                        <ProtectedRoute>
-                          <CheckoutPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                     <Route 
-                      path="/login-required" 
-                      element={
-                        <ProtectedRoute>
-                          {/* This content is never shown to unauthenticated users */}
-                          <div /> 
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route path="/login" element={<LoginPage />} />
-                    <Route 
-                      path="/account" 
-                      element={
-                        <ProtectedRoute>
-                          <AccountPage />
-                        </ProtectedRoute>
-                      } 
-                    />
-                    <Route
-                      path="/wishlist"
-                      element={
-                        <ProtectedRoute>
-                          <WishlistPage />
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Routes>
-                </main>
-                <Footer />
-                <BackToTopButton />
-                <HelpWidget />
-              </div>
-            </CartProvider>
-          </WishlistProvider>
+          <ProductProvider>
+            <WishlistProvider>
+              <CartProvider>
+                <div className="flex flex-col min-h-screen bg-white text-gray-800">
+                  <Header />
+                  <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/shop" element={<ShopPage />} />
+                      <Route path="/product/:id" element={<ProductPage />} />
+                      <Route path="/cart" element={<CartPage />} />
+                      <Route 
+                        path="/checkout"
+                        element={
+                          <ProtectedRoute>
+                            <CheckoutPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                       <Route 
+                        path="/login-required" 
+                        element={
+                          <ProtectedRoute>
+                            <div /> 
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route path="/login" element={<LoginPage />} />
+                      <Route 
+                        path="/account" 
+                        element={
+                          <ProtectedRoute>
+                            <AccountPage />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route
+                        path="/wishlist"
+                        element={
+                          <ProtectedRoute>
+                            <WishlistPage />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="/admin/*"
+                        element={
+                          <AdminProtectedRoute>
+                            <AdminPage />
+                          </AdminProtectedRoute>
+                        }
+                      />
+                    </Routes>
+                  </main>
+                  <Footer />
+                  <BackToTopButton />
+                  <HelpWidget />
+                </div>
+              </CartProvider>
+            </WishlistProvider>
+          </ProductProvider>
         </AuthProvider>
       </HashRouter>
     </ToastProvider>
