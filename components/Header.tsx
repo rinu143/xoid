@@ -192,9 +192,19 @@ const NavItem: React.FC<{ to: string; children: React.ReactNode }> = ({ to, chil
 
 const Header: React.FC = () => {
   const { itemCount } = useCart();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const { wishlist } = useWishlist();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Helper function to get user initials
+  const getUserInitials = (name: string): string => {
+    if (!name) return '';
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
 
   return (
     <>
@@ -233,9 +243,15 @@ const Header: React.FC = () => {
                 )}
               </Link>
               <Link to={isLoggedIn ? "/account" : "/login"} className="text-gray-700 hover:text-black transition-colors" aria-label="Account">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                </svg>
+                {isLoggedIn && user ? (
+                  <div className="h-7 w-7 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold" title={`Logged in as ${user.name}`}>
+                    {getUserInitials(user.name)}
+                  </div>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                  </svg>
+                )}
               </Link>
               <Link to="/cart" className="relative text-gray-700 hover:text-black transition-colors" aria-label="Shopping Cart">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
