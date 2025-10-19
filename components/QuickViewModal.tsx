@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Product } from '../types';
 import { useCart, useWishlist } from '../App';
 import { Link } from 'react-router-dom';
@@ -27,51 +27,6 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [addToCartState, setAddToCartState] = useState<'idle' | 'success'>('idle');
-  const modalRef = useRef<HTMLDivElement>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    const previouslyFocusedElement = document.activeElement as HTMLElement;
-    closeButtonRef.current?.focus();
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-      if (event.key === 'Tab') {
-        if (!modalRef.current) return;
-        const focusableElements = Array.from(
-          modalRef.current.querySelectorAll<HTMLElement>(
-            'a[href]:not([disabled]), button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-          )
-        ).filter(el => el.offsetParent !== null);
-        
-        if (focusableElements.length === 0) return;
-
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        if (event.shiftKey) {
-          if (document.activeElement === firstElement) {
-            lastElement.focus();
-            event.preventDefault();
-          }
-        } else {
-          if (document.activeElement === lastElement) {
-            firstElement.focus();
-            event.preventDefault();
-          }
-        }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'auto';
-      previouslyFocusedElement?.focus();
-    };
-  }, [onClose]);
 
 
   const isInWishlist = isProductInWishlist(product.id);
@@ -106,25 +61,21 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
 
   const currentImageUrl = product.imageUrls[currentImageIndex];
   const isOutOfStock = product.stock === 0;
-  const titleId = `qvm-title-${product.id}`;
 
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-[70] p-4 transition-opacity"
       onClick={onClose}
+      aria-modal="true"
+      role="dialog"
     >
       <div
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
         className="relative bg-white rounded-lg w-full max-w-5xl max-h-[95vh] flex flex-col md:flex-row overflow-hidden border border-gray-200"
         onClick={handleModalContentClick}
       >
         <button
-          ref={closeButtonRef}
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-black transition-colors z-20 rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-black"
+          className="absolute top-4 right-4 text-gray-500 hover:text-black transition-colors z-20"
           aria-label="Close"
         >
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -148,9 +99,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                         key={index}
                         onClick={() => setCurrentImageIndex(index)}
                         className={`aspect-w-1 aspect-h-1 rounded-md overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-white focus:ring-black ${currentImageIndex === index ? 'ring-2 ring-black' : 'opacity-75 hover:opacity-100'}`}
-                        aria-label={`View image ${index + 1} of ${product.name}`}
                     >
-                        <img src={url} alt="" className="w-full h-full object-center object-cover" />
+                        <img src={url} alt={`Thumbnail ${index + 1}`} className="w-full h-full object-center object-cover" />
                     </button>
                 ))}
             </div>
@@ -160,7 +110,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
         <div className="md:w-1/2 w-full p-6 sm:p-8 flex flex-col justify-between overflow-y-auto">
           <div>
             <div className="flex justify-between items-start gap-4">
-              <h2 id={titleId} className="text-3xl font-black tracking-tight text-black">{product.name}</h2>
+              <h2 className="text-3xl font-black tracking-tight text-black">{product.name}</h2>
             </div>
             
             <div className="mt-4 flex items-center justify-between">
@@ -190,7 +140,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                     {product.sizes.map((size) => (
                        <label
                         key={size}
-                        className={`group relative border rounded-md py-3 px-3 flex items-center justify-center text-sm font-medium uppercase hover:bg-gray-50 focus-within:ring-2 focus-within:ring-black cursor-pointer transition-colors ${
+                        className={`group relative border rounded-md py-3 px-3 flex items-center justify-center text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none cursor-pointer transition-colors ${
                           selectedSize === size
                             ? 'bg-black text-white border-black'
                             : 'bg-white text-black border-gray-200'
@@ -224,7 +174,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                     <div className="flex items-center border border-gray-300 rounded-md">
                         <button
                             onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                            className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-l-md focus:outline-none focus:ring-2 focus:ring-black"
+                            className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-l-md"
                             aria-label="Decrease quantity"
                         >
                             &ndash;
@@ -232,7 +182,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                         <span className="px-4 py-2 text-black font-medium" aria-live="polite">{quantity}</span>
                         <button
                             onClick={() => setQuantity(q => q + 1)}
-                            className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-r-md focus:outline-none focus:ring-2 focus:ring-black"
+                            className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-r-md"
                             aria-label="Increase quantity"
                         >
                             +
@@ -245,7 +195,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                  <button
                   onClick={handleAddToCart}
                   disabled={isOutOfStock || addToCartState === 'success'}
-                  className="relative flex-1 w-full h-12 bg-black text-white font-bold px-6 rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out transform active:scale-95 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed overflow-hidden focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+                  className="relative flex-1 w-full h-12 bg-black text-white font-bold px-6 rounded-md hover:bg-gray-800 transition-all duration-200 ease-in-out transform active:scale-95 flex items-center justify-center disabled:bg-gray-400 disabled:cursor-not-allowed overflow-hidden"
                 >
                   <span className={`transition-transform duration-300 ease-in-out flex items-center justify-center ${addToCartState === 'idle' ? 'translate-y-0' : '-translate-y-12'}`}>
                      {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
@@ -261,7 +211,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                     onClick={handleWishlistToggle}
                     type="button"
                     aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                    className={`flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-md border transition-all duration-200 ease-in-out transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-black ${isInWishlist ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-300 text-black hover:bg-gray-100'}`}
+                    className={`flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-md border transition-all duration-200 ease-in-out transform active:scale-95 ${isInWishlist ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-300 text-black hover:bg-gray-100'}`}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill={isInWishlist ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -271,7 +221,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
             <Link
               to={`/product/${product.id}`}
               onClick={onClose}
-              className="mt-4 block text-center w-full text-black font-medium hover:underline text-sm focus:outline-none focus:ring-2 focus:ring-black rounded"
+              className="mt-4 block text-center w-full text-black font-medium hover:underline text-sm"
             >
               View Full Product Details
             </Link>

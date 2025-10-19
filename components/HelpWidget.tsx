@@ -37,9 +37,7 @@ const TabButton: React.FC<{
 }> = ({ label, isActive, onClick }) => (
   <button
     onClick={onClick}
-    role="tab"
-    aria-selected={isActive}
-    className={`flex-1 px-3 py-2 text-sm font-bold text-center transition-all duration-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black/50 ${
+    className={`flex-1 px-3 py-2 text-sm font-bold text-center transition-all duration-300 rounded-md ${
       isActive ? 'bg-white text-black shadow-sm' : 'bg-transparent text-gray-500 hover:text-black'
     }`}
   >
@@ -123,7 +121,7 @@ const ChatView: React.FC = () => {
                         className="flex-1 w-full bg-gray-100 border-transparent rounded-full py-2.5 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-black/50"
                         disabled={isLoading}
                     />
-                    <button onClick={handleSend} disabled={isLoading || !input.trim()} className="bg-black text-white rounded-full h-10 w-10 flex items-center justify-center flex-shrink-0 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">
+                    <button onClick={handleSend} disabled={isLoading || !input.trim()} className="bg-black text-white rounded-full h-10 w-10 flex items-center justify-center flex-shrink-0 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed">
                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>
                     </button>
                 </div>
@@ -134,7 +132,7 @@ const ChatView: React.FC = () => {
 
 const FloatingLabelInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label: string }> = ({ label, id, ...props }) => (
     <div className="relative">
-      <input id={id} placeholder=" " className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-2 focus:ring-offset-1 focus:border-black focus:ring-black peer" {...props} />
+      <input id={id} placeholder=" " className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer" {...props} />
       <label htmlFor={id} className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
         {label}
       </label>
@@ -142,7 +140,7 @@ const FloatingLabelInput: React.FC<React.InputHTMLAttributes<HTMLInputElement> &
 );
 const FloatingLabelTextarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement> & { label: string }> = ({ label, id, ...props }) => (
     <div className="relative">
-      <textarea id={id} placeholder=" " className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-2 focus:ring-offset-1 focus:border-black focus:ring-black peer" {...props} />
+      <textarea id={id} placeholder=" " className="block px-3.5 pb-2.5 pt-4 w-full text-sm text-black bg-white rounded-lg border border-gray-300 appearance-none focus:outline-none focus:ring-0 focus:border-black peer" {...props} />
       <label htmlFor={id} className="absolute text-sm text-gray-500 duration-300 transform -translate-y-4 scale-75 top-2 z-10 origin-[0] bg-white px-2 peer-focus:px-2 peer-focus:text-black peer-placeholder-shown:scale-100 peer-placeholder-shown:-translate-y-1/2 peer-placeholder-shown:top-1/2 peer-focus:top-2 peer-focus:scale-75 peer-focus:-translate-y-4 start-1">
         {label}
       </label>
@@ -166,7 +164,7 @@ const ContactView: React.FC = () => {
                 <FloatingLabelInput label="Full Name" id="contact-name" name="name" type="text" required />
                 <FloatingLabelInput label="Email Address" id="contact-email" name="email" type="email" required />
                 <FloatingLabelTextarea label="Your Message..." id="contact-message" name="message" rows={5} required />
-                <button type="submit" className="w-full bg-black text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black">Send Message</button>
+                <button type="submit" className="w-full bg-black text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-800 transition-colors">Send Message</button>
             </form>
         </div>
     );
@@ -174,29 +172,15 @@ const ContactView: React.FC = () => {
 
 const FaqItem: React.FC<{ faq: { question: string; answer: string; } }> = ({ faq }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const contentId = React.useId();
-    const buttonId = React.useId();
-
     return (
         <div className="border-b border-gray-200/80">
-            <button 
-                id={buttonId}
-                onClick={() => setIsOpen(!isOpen)} 
-                aria-expanded={isOpen}
-                aria-controls={contentId}
-                className="w-full flex justify-between items-center text-left py-4 group focus:outline-none focus:ring-2 focus:ring-black rounded-md"
-            >
+            <button onClick={() => setIsOpen(!isOpen)} className="w-full flex justify-between items-center text-left py-4 group">
                 <span className="font-semibold text-black text-sm group-hover:text-gray-700 transition-colors">{faq.question}</span>
                 <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-500 transition-transform duration-300 ${isOpen ? 'transform rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                 </svg>
             </button>
-            <div 
-                id={contentId}
-                role="region"
-                aria-labelledby={buttonId}
-                className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
-            >
+            <div className={`grid transition-all duration-300 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
                 <div className="overflow-hidden">
                     <p className="text-gray-600 text-sm pb-4">{faq.answer}</p>
                 </div>
@@ -220,47 +204,6 @@ const FaqView: React.FC = () => (
 const HelpWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeView, setActiveView] = useState<View>('chat');
-  const widgetRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.key === 'Escape') setIsOpen(false);
-            if (event.key === 'Tab') {
-                if (!widgetRef.current) return;
-                const focusableElements = Array.from(
-                    widgetRef.current.querySelectorAll<HTMLElement>(
-                        'a[href], button, input, [tabindex]:not([tabindex="-1"])'
-                    )
-                ).filter(el => el.offsetParent !== null);
-                
-                if (focusableElements.length === 0) return;
-
-                const firstElement = focusableElements[0];
-                const lastElement = focusableElements[focusableElements.length - 1];
-
-                if (event.shiftKey) {
-                    if (document.activeElement === firstElement) {
-                        lastElement.focus();
-                        event.preventDefault();
-                    }
-                } else {
-                    if (document.activeElement === lastElement) {
-                        firstElement.focus();
-                        event.preventDefault();
-                    }
-                }
-            }
-        };
-
-        document.addEventListener('keydown', handleKeyDown);
-        return () => {
-            document.removeEventListener('keydown', handleKeyDown);
-            triggerRef.current?.focus();
-        };
-    }
-  }, [isOpen]);
 
   const renderView = () => {
     switch (activeView) {
@@ -275,11 +218,9 @@ const HelpWidget: React.FC = () => {
     <>
       {/* Floating Action Button */}
       <button
-        ref={triggerRef}
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Close help widget" : "Open help widget"}
         aria-expanded={isOpen}
-        aria-controls="help-widget-drawer"
         className="fixed bottom-6 right-6 z-[80] bg-black text-white rounded-full h-14 w-14 flex items-center justify-center shadow-xl transition-all duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
       >
         <div className="relative h-7 w-7 flex items-center justify-center">
@@ -297,27 +238,24 @@ const HelpWidget: React.FC = () => {
       {/* Help Drawer */}
       <div className={`fixed inset-0 bg-black bg-opacity-25 z-[70] transition-opacity duration-300 lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsOpen(false)}></div>
       <div
-        id="help-widget-drawer"
-        ref={widgetRef}
         className={`fixed bottom-24 right-6 z-[80] w-[calc(100vw-48px)] max-w-sm h-[70vh] max-h-[600px] bg-gray-50 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200/80 transition-all duration-300 ease-in-out origin-bottom-right ${isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="help-widget-title"
-        hidden={!isOpen}
       >
         <header className="flex-shrink-0 p-4 border-b border-gray-200/80 bg-white/80 backdrop-blur-sm">
             <h2 id="help-widget-title" className="font-bold text-lg text-black text-center">XOID Help Center</h2>
         </header>
         
         <div className="p-2 border-b border-gray-200/80">
-          <div role="tablist" aria-label="Help Center Sections" className="flex justify-around bg-gray-100 rounded-lg p-1">
+          <div className="flex justify-around bg-gray-100 rounded-lg p-1">
             <TabButton label="Live Chat" isActive={activeView === 'chat'} onClick={() => setActiveView('chat')} />
             <TabButton label="Contact Us" isActive={activeView === 'contact'} onClick={() => setActiveView('contact')} />
             <TabButton label="FAQ" isActive={activeView === 'faq'} onClick={() => setActiveView('faq')} />
           </div>
         </div>
         
-        <div className="flex-grow overflow-hidden" role="tabpanel">
+        <div className="flex-grow overflow-hidden">
             {renderView()}
         </div>
       </div>

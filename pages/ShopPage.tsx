@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { products } from '../data/products';
 import ProductCard from '../components/ProductCard';
 import Filters from '../components/Filters';
@@ -28,53 +28,6 @@ const ShopPage: React.FC = () => {
   const [sortBy, setSortBy] = useState('featured');
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
-  const filterPanelRef = useRef<HTMLDivElement>(null);
-  const filterButtonRef = useRef<HTMLButtonElement>(null);
-
-  useEffect(() => {
-    if (isFilterPanelOpen) {
-      document.body.style.overflow = 'hidden';
-      const focusableElements = filterPanelRef.current?.querySelectorAll<HTMLElement>(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      );
-      focusableElements?.[0]?.focus();
-
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Tab') {
-          if (!filterPanelRef.current) return;
-           const focusable = Array.from(filterPanelRef.current.querySelectorAll<HTMLElement>(
-            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-          )).filter(el => el.offsetParent !== null);
-          
-          if (focusable.length === 0) return;
-
-          const firstElement = focusable[0];
-          const lastElement = focusable[focusable.length - 1];
-
-          if (event.shiftKey) {
-            if (document.activeElement === firstElement) {
-              lastElement.focus();
-              event.preventDefault();
-            }
-          } else {
-            if (document.activeElement === lastElement) {
-              firstElement.focus();
-              event.preventDefault();
-            }
-          }
-        }
-      };
-      
-      document.addEventListener('keydown', handleKeyDown);
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-      };
-    } else {
-      document.body.style.overflow = 'auto';
-      filterButtonRef.current?.focus();
-    }
-  }, [isFilterPanelOpen]);
-
 
   const availableColors = useMemo(() => Array.from(new Set(products.map(p => p.color))), []);
   const availableSizes = useMemo(() => {
@@ -177,14 +130,12 @@ const ShopPage: React.FC = () => {
         aria-hidden={!isFilterPanelOpen}
       >
         <div 
-            ref={filterPanelRef}
             className={`fixed inset-y-0 left-0 w-full max-w-xs bg-white shadow-xl transform transition-transform ease-in-out duration-300 ${
                 isFilterPanelOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="filter-panel-title"
         >
             <Filters
                 filters={filters}
@@ -212,11 +163,8 @@ const ShopPage: React.FC = () => {
         <main className="lg:col-span-3">
           <div className="flex justify-between items-center mb-6 pb-4 border-b border-gray-200">
             <button 
-                ref={filterButtonRef}
                 onClick={() => setIsFilterPanelOpen(true)}
-                className="flex items-center text-sm font-medium text-gray-700 hover:text-black lg:hidden rounded-md p-2 -ml-2 focus:outline-none focus:ring-2 focus:ring-black"
-                aria-expanded={isFilterPanelOpen}
-                aria-controls="filter-panel"
+                className="flex items-center text-sm font-medium text-gray-700 hover:text-black lg:hidden"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clipRule="evenodd" />
@@ -245,14 +193,14 @@ const ShopPage: React.FC = () => {
               {activeFiltersForDisplay.map(filter => (
                 <div key={filter.label} className="flex items-center bg-gray-100 rounded-full pl-3 pr-1.5 py-1 text-sm font-medium text-gray-800">
                   <span>{filter.label}</span>
-                  <button onClick={() => removeFilter(filter.type, filter.value)} className="ml-1.5 text-gray-500 hover:text-black rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-black" aria-label={`Remove ${filter.label} filter`}>
+                  <button onClick={() => removeFilter(filter.type, filter.value)} className="ml-1.5 text-gray-500 hover:text-black rounded-full hover:bg-gray-200" aria-label={`Remove ${filter.label} filter`}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                     </svg>
                   </button>
                 </div>
               ))}
-              <button onClick={handleClearFilters} className="text-sm text-gray-600 hover:text-black hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-black rounded">
+              <button onClick={handleClearFilters} className="text-sm text-gray-600 hover:text-black hover:underline transition-colors">
                   Clear All
               </button>
             </div>

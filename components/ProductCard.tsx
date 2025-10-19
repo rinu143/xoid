@@ -27,7 +27,7 @@ const WishlistButton: React.FC<{ product: Product }> = ({ product }) => {
     return (
         <button
             onClick={handleWishlistToggle}
-            className={`absolute top-4 right-4 z-20 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-black ${isInWishlist ? 'scale-100 text-red-500' : 'scale-0 group-hover:scale-100 text-black hover:text-red-500'}`}
+            className={`absolute top-4 right-4 z-20 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out transform active:scale-95 ${isInWishlist ? 'scale-100 text-red-500' : 'scale-0 group-hover:scale-100 text-black hover:text-red-500'}`}
             aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
         >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill={isInWishlist ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -39,6 +39,9 @@ const WishlistButton: React.FC<{ product: Product }> = ({ product }) => {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickViewClick }) => {
   const handleButtonClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    // Prevent the Link navigation when clicking the button
+    e.preventDefault();
+    e.stopPropagation();
     if (onQuickViewClick) {
       onQuickViewClick(product);
     }
@@ -53,7 +56,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickViewClick }) 
   const reviewCount = productReviews.length;
 
   return (
-    <div className="group relative">
+    <Link to={`/product/${product.id}`} className="group block">
       <div className="relative overflow-hidden aspect-[3/4] bg-gray-100 rounded-md">
         
         {/* Wishlist Button - Placed here to be on top and control its own visibility */}
@@ -69,18 +72,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickViewClick }) 
 
         {/* Out of Stock Badge */}
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
             <span className="font-bold text-black tracking-widest uppercase text-sm">Out of Stock</span>
           </div>
         )}
         
         {/* Hover Effect Container */}
         {onQuickViewClick && !isOutOfStock && (
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex items-end justify-center p-4 z-20">
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex items-end justify-center p-4">
             {/* Quick View Button */}
             <button
               onClick={handleButtonClick}
-              className="w-full bg-white text-black font-bold py-3 px-8 rounded-md opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 ease-in-out active:scale-95 focus:outline-none focus:ring-2 focus:ring-black"
+              className="w-full bg-white text-black font-bold py-3 px-8 rounded-md opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300 ease-in-out active:scale-95"
               aria-label={`Quick view for ${product.name}`}
             >
               Quick View
@@ -92,13 +95,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickViewClick }) 
       {/* Product Details */}
       <div className="mt-4 flex justify-between items-start">
         <div>
-          <h3 className="text-sm text-gray-800 font-medium">
-             <Link to={`/product/${product.id}`} className="focus:outline-none">
-                {/* This span makes the entire card clickable for mouse users without invalid HTML */}
-                <span className="absolute inset-0 z-0" aria-hidden="true" />
-                {product.name}
-             </Link>
-          </h3>
+          <h3 className="text-sm text-gray-800 font-medium">{product.name}</h3>
           {reviewCount > 0 && (
             <div className="mt-1 flex items-center">
               <StarRating rating={averageRating} />
@@ -106,9 +103,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickViewClick }) 
             </div>
           )}
         </div>
-        <p className="text-sm font-semibold text-black relative z-10">${product.price}</p>
+        <p className="text-sm font-semibold text-black">${product.price}</p>
       </div>
-    </div>
+    </Link>
   );
 };
 

@@ -10,18 +10,7 @@ import { Product } from '../types';
 // Defined within Header.tsx to avoid creating a new file per environment constraints.
 interface SearchModalProps {
   onClose: () => void;
-  openerRef: React.RefObject<HTMLButtonElement>;
 }
-
-// FIX: Define availableColors and availableSizes based on products data
-const availableColors = Array.from(new Set(products.map(p => p.color)));
-const availableSizes = (() => {
-    const allSizes = products.flatMap(p => p.sizes);
-    const uniqueSizes = Array.from(new Set(allSizes));
-    const sortOrder = ['S', 'M', 'L', 'XL'];
-    uniqueSizes.sort((a, b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
-    return uniqueSizes;
-})();
 
 const colorMap: { [key: string]: string } = {
   Black: '#111827',
@@ -32,60 +21,31 @@ const colorMap: { [key: string]: string } = {
 
 const popularSearches = ['Minimalist', 'Graphic', 'Heavyweight Cotton', 'Noir'];
 
-const SearchModal: React.FC<SearchModalProps> = ({ onClose, openerRef }) => {
+const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
   const [query, setQuery] = useState('');
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [results, setResults] = useState<Product[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
-  const modalRef = useRef<HTMLDivElement>(null);
-  const [titleId] = useState('search-modal-title-' + Math.random().toString(36).substr(2, 9));
 
+  const availableColors = useMemo(() => Array.from(new Set(products.map(p => p.color))), []);
+  const availableSizes = useMemo(() => {
+    const allSizes = products.flatMap(p => p.sizes);
+    return ['S', 'M', 'L', 'XL'].filter(size => allSizes.includes(size));
+  }, []);
 
   useEffect(() => {
     inputRef.current?.focus();
-    
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
-      if (event.key === 'Tab') {
-        if (!modalRef.current) return;
-        const focusableElements = Array.from(
-          modalRef.current.querySelectorAll<HTMLElement>(
-            'a[href]:not([disabled]), button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])'
-          )
-        ).filter(el => el.offsetParent !== null);
-        
-        if (focusableElements.length === 0) return;
-
-        const firstElement = focusableElements[0];
-        const lastElement = focusableElements[focusableElements.length - 1];
-
-        if (event.shiftKey) { // Shift + Tab
-          if (document.activeElement === firstElement) {
-            lastElement.focus();
-            event.preventDefault();
-          }
-        } else { // Tab
-          if (document.activeElement === lastElement) {
-            firstElement.focus();
-            event.preventDefault();
-          }
-        }
-      }
+      if (event.key === 'Escape') onClose();
     };
-
     document.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
-
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'auto';
-      openerRef.current?.focus();
     };
-  }, [onClose, openerRef]);
-
+  }, [onClose]);
 
   useEffect(() => {
     const lowerCaseQuery = query.toLowerCase();
@@ -122,14 +82,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose, openerRef }) => {
       onClick={onClose}
     >
       <div
-        ref={modalRef}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
         className="w-full max-w-4xl bg-white rounded-xl shadow-2xl flex flex-col transform transition-all duration-300 ease-in-out max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 id={titleId} className="sr-only">Search Products</h2>
         {/* Search Input and Header */}
         <div className="relative border-b border-gray-200 flex-shrink-0">
           <div className="absolute inset-y-0 left-0 flex items-center pl-6 pointer-events-none">
@@ -148,7 +103,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose, openerRef }) => {
                 <h3 className="text-sm font-bold text-gray-500 tracking-widest uppercase mb-4">Popular</h3>
                 <div className="flex flex-wrap gap-2 mb-6">
                   {popularSearches.map(term => (
-                    <button key={term} onClick={() => setQuery(term)} className="px-3 py-1.5 bg-gray-100 text-sm text-gray-800 rounded-full hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-black">
+                    <button key={term} onClick={() => setQuery(term)} className="px-3 py-1.5 bg-gray-100 text-sm text-gray-800 rounded-full hover:bg-gray-200 transition-colors">
                       {term}
                     </button>
                   ))}
@@ -157,7 +112,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose, openerRef }) => {
                 <h3 className="text-sm font-bold text-gray-500 tracking-widest uppercase mb-4">Filter by Color</h3>
                 <div className="flex flex-wrap gap-3 mb-6">
                     {availableColors.map(color => (
-                        <button key={color} onClick={() => handleColorToggle(color)} className={`w-8 h-8 rounded-full border border-gray-300 transition-transform transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black ${selectedColors.includes(color) ? 'ring-2 ring-offset-1 ring-black' : ''}`}
+                        <button key={color} onClick={() => handleColorToggle(color)} className={`w-8 h-8 rounded-full border border-gray-300 transition-transform transform hover:scale-110 ${selectedColors.includes(color) ? 'ring-2 ring-offset-1 ring-black' : ''}`}
                          style={{ backgroundColor: colorMap[color] || '#ccc' }} aria-label={`Filter by color ${color}`} aria-pressed={selectedColors.includes(color)} />
                     ))}
                 </div>
@@ -166,7 +121,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose, openerRef }) => {
                 <div className="flex flex-wrap gap-3">
                     {availableSizes.map(size => (
                         <button key={size} onClick={() => handleSizeToggle(size)}
-                        className={`px-4 py-2 rounded-md border text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black ${selectedSizes.includes(size) ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-300 hover:bg-gray-100'}`}
+                        className={`px-4 py-2 rounded-md border text-sm font-medium transition-colors ${selectedSizes.includes(size) ? 'bg-black text-white border-black' : 'bg-white text-black border-gray-300 hover:bg-gray-100'}`}
                         aria-pressed={selectedSizes.includes(size)}>{size}</button>
                     ))}
                 </div>
@@ -177,7 +132,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose, openerRef }) => {
               {(activeFiltersCount > 0) && (
                 <div className="flex items-center justify-between mb-4">
                   <p className="text-sm font-semibold text-black">{results.length} Result{results.length !== 1 && 's'}</p>
-                  <button onClick={clearFilters} className="text-sm font-medium text-gray-600 hover:text-black hover:underline transition-colors focus:outline-none focus:ring-2 focus:ring-black rounded">
+                  <button onClick={clearFilters} className="text-sm font-medium text-gray-600 hover:text-black hover:underline transition-colors">
                     Clear All
                   </button>
                 </div>
@@ -193,7 +148,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose, openerRef }) => {
               {results.length > 0 && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {results.map(product => (
-                    <Link key={product.id} to={`/product/${product.id}`} onClick={onClose} className="group block focus:outline-none focus:ring-2 focus:ring-black rounded-md">
+                    <Link key={product.id} to={`/product/${product.id}`} onClick={onClose} className="group block">
                        <div className="relative overflow-hidden aspect-[3/4] bg-gray-100 rounded-md">
                           <img src={product.imageUrls[0]} alt={product.name} className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-in-out group-hover:scale-105" />
                        </div>
@@ -218,7 +173,7 @@ const NavItem: React.FC<{ to: string; children: React.ReactNode }> = ({ to, chil
     <NavLink 
       to={to} 
       className={({ isActive }) => 
-        `relative group py-2 text-base font-medium transition-colors duration-300 rounded focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-black/50 ${
+        `relative group py-2 text-base font-medium transition-colors duration-300 ${
           isActive ? 'text-black' : 'text-gray-700 hover:text-black'
         }`
       }
@@ -240,7 +195,6 @@ const Header: React.FC = () => {
   const { isLoggedIn, user } = useAuth();
   const { wishlist } = useWishlist();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const searchButtonRef = useRef<HTMLButtonElement>(null);
 
   // Helper function to get user initials
   const getUserInitials = (name: string): string => {
@@ -270,16 +224,15 @@ const Header: React.FC = () => {
             </div>
             <div className="flex items-center space-x-6">
               <button
-                ref={searchButtonRef}
                 onClick={() => setIsSearchOpen(true)}
-                className="text-gray-700 hover:text-black transition-colors rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-black"
+                className="text-gray-700 hover:text-black transition-colors"
                 aria-label="Search"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
-               <Link to="/wishlist" className="relative text-gray-700 hover:text-black transition-colors rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-black" aria-label="Wishlist">
+               <Link to="/wishlist" className="relative text-gray-700 hover:text-black transition-colors" aria-label="Wishlist">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
@@ -289,7 +242,7 @@ const Header: React.FC = () => {
                   </span>
                 )}
               </Link>
-              <Link to={isLoggedIn ? "/account" : "/login"} className="text-gray-700 hover:text-black transition-colors rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-black" aria-label="Account">
+              <Link to={isLoggedIn ? "/account" : "/login"} className="text-gray-700 hover:text-black transition-colors" aria-label="Account">
                 {isLoggedIn && user ? (
                   <div className="h-7 w-7 rounded-full bg-black text-white flex items-center justify-center text-xs font-bold" title={`Logged in as ${user.name}`}>
                     {getUserInitials(user.name)}
@@ -300,7 +253,7 @@ const Header: React.FC = () => {
                   </svg>
                 )}
               </Link>
-              <Link to="/cart" className="relative text-gray-700 hover:text-black transition-colors rounded-full p-1 focus:outline-none focus:ring-2 focus:ring-black" aria-label="Shopping Cart">
+              <Link to="/cart" className="relative text-gray-700 hover:text-black transition-colors" aria-label="Shopping Cart">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                 </svg>
@@ -314,7 +267,7 @@ const Header: React.FC = () => {
           </div>
         </nav>
       </header>
-      {isSearchOpen && <SearchModal onClose={() => setIsSearchOpen(false)} openerRef={searchButtonRef} />}
+      {isSearchOpen && <SearchModal onClose={() => setIsSearchOpen(false)} />}
     </>
   );
 };
