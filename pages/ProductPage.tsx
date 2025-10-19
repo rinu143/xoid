@@ -7,6 +7,7 @@ import ProductReviews from '../components/ProductReviews';
 import ReviewForm from '../components/ReviewForm';
 import SimilarProducts from '../components/SimilarProducts';
 import { useToast } from '../components/ToastProvider';
+import StarRating from '../components/StarRating';
 
 interface ProductPageProps {
   products: Product[];
@@ -73,6 +74,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
     return <div className="text-center py-20">Product not found.</div>;
   }
   
+  const averageRating = reviews.length > 0 ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length : 0;
   const isInWishlist = isProductInWishlist(product.id);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -213,6 +215,27 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
             <StockDisplay stock={product.stock} />
           </div>
 
+          <div className="mt-6">
+            {reviews.length > 0 ? (
+                <div className="flex items-center">
+                    <StarRating rating={averageRating} />
+                    <a 
+                      href="#reviews-section" 
+                      onClick={(e) => { 
+                        e.preventDefault(); 
+                        setActiveTab('reviews'); 
+                        document.getElementById('reviews-section')?.scrollIntoView({ behavior: 'smooth' }); 
+                      }} 
+                      className="ml-3 text-sm font-medium text-black hover:underline"
+                    >
+                        {reviews.length} review{reviews.length > 1 ? 's' : ''}
+                    </a>
+                </div>
+            ) : (
+                <p className="text-sm text-gray-500">No reviews yet.</p>
+            )}
+          </div>
+
            <div className="mt-6 border-t border-gray-200 pt-6">
              <h3 className="text-sm font-medium text-black">Color</h3>
              <div className="mt-2">
@@ -337,7 +360,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
           </div>
           
           {/* Tabs Section */}
-            <div className="mt-12">
+            <div className="mt-12" id="reviews-section">
                 <div className="border-b border-gray-200">
                     <div className="-mb-px flex space-x-8" aria-label="Tabs">
                         <TabButton tabName="details" label="Details & Fit" />

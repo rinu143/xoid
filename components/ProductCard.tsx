@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types';
 import { useWishlist } from '../App';
+import { reviews } from '../data/reviews';
+import StarRating from './StarRating';
 
 interface ProductCardProps {
   product: Product;
@@ -47,6 +49,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickViewClick }) 
 
   const isOutOfStock = product.stock === 0;
 
+  const productReviews = reviews.filter(review => review.productId === product.id);
+  const averageRating = productReviews.length > 0
+    ? productReviews.reduce((acc, review) => acc + review.rating, 0) / productReviews.length
+    : 0;
+  const reviewCount = productReviews.length;
+
   return (
     <Link to={`/product/${product.id}`} className="group block">
       <div className="relative overflow-hidden aspect-[3/4] bg-gray-100 rounded-md">
@@ -85,11 +93,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickViewClick }) 
       </div>
 
       {/* Product Details */}
-      <div className="mt-4 flex justify-between">
+      <div className="mt-4 flex justify-between items-start">
         <div>
           <h3 className="text-sm text-gray-800 font-medium">{product.name}</h3>
+          {reviewCount > 0 && (
+            <div className="mt-1 flex items-center">
+              <StarRating rating={averageRating} />
+              <p className="ml-2 text-xs text-gray-500">{reviewCount} review{reviewCount > 1 ? 's' : ''}</p>
+            </div>
+          )}
         </div>
-        <p className="text-sm font-semibold text-gray-600">${product.price}</p>
+        <p className="text-sm font-semibold text-black">${product.price}</p>
       </div>
     </Link>
   );
