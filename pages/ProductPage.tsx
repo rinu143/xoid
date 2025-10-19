@@ -24,9 +24,8 @@ const StockDisplay: React.FC<{ stock: number }> = ({ stock }) => {
 
 const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
   const { id } = useParams<{ id: string }>();
-  const { addToCart, clearCart } = useCart();
+  const { addToCart, buyNow } = useCart();
   const { addToast } = useToast();
-  const navigate = useNavigate();
   
   const product = products.find(p => p.id === parseInt(id || ''));
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -95,9 +94,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
         return;
     }
     setAddToCartError(null);
-    clearCart();
-    addToCart(product, 1, selectedSize);
-    navigate('/checkout');
+    buyNow(product, 1, selectedSize);
   };
   
   const handleAddReview = ({ rating, comment }: { rating: number; comment: string }) => {

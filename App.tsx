@@ -1,5 +1,5 @@
 import React, { useState, createContext, useContext, useCallback } from 'react';
-import { HashRouter, Routes, Route, Link, useParams } from 'react-router-dom';
+import { HashRouter, Routes, Route, Link, useParams, useLocation, useNavigate } from 'react-router-dom';
 import { CartItem, Product, Address } from './types';
 import { products } from './data/products';
 import HomePage from './pages/HomePage';
@@ -19,6 +19,7 @@ import BackToTopButton from './components/BackToTopButton';
 interface CartContextType {
   cart: CartItem[];
   addToCart: (product: Product, quantity: number, size: string) => void;
+  buyNow: (product: Product, quantity: number, size: string) => void;
   removeFromCart: (cartItemId: string) => void;
   updateQuantity: (cartItemId: string, quantity: number) => void;
   clearCart: () => void;
@@ -54,6 +55,8 @@ interface AuthContextType {
   updateAddress: (address: Address) => void;
   deleteAddress: (addressId: string) => void;
   setDefaultAddress: (addressId: string) => void;
+  pendingAction: (() => void) | null;
+  setPendingAction: (action: (() => void) | null) => void;
 }
 
 
@@ -70,12 +73,19 @@ export const useAuth = () => {
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   const login = (email: string, password: string): boolean => {
     // Mock credentials
     if (email.toLowerCase() === 'admin@gmail.com' && password === 'admin123') {
       setIsLoggedIn(true);
       setUser({ name: 'John Doe', email: 'admin@gmail.com', password: 'admin123', addresses: [] });
+      
+      if (pendingAction) {
+        pendingAction();
+        setPendingAction(null); // Clear action after execution
+      }
+
       return true;
     }
     return false;
@@ -158,7 +168,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     });
   };
 
-  const value = { isLoggedIn, user, login, logout, updateUser, changePassword, addAddress, updateAddress, deleteAddress, setDefaultAddress };
+  const value = { isLoggedIn, user, login, logout, updateUser, changePassword, addAddress, updateAddress, deleteAddress, setDefaultAddress, pendingAction, setPendingAction };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
@@ -167,8 +177,11 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>([]);
   const { addToast } = useToast();
+  const { isLoggedIn, setPendingAction } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const addToCart = useCallback((product: Product, quantity: number, size: string) => {
+  const _performAddToCart = useCallback((product: Product, quantity: number, size: string) => {
     const productInStock = products.find(p => p.id === product.id);
     if (!productInStock) return;
 
@@ -193,6 +206,50 @@ const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     
     addToast(`${product.name} added to cart.`);
   }, [cart, addToast]);
+
+  const addToCart = useCallback((product: Product, quantity: number, size: string) => {
+    if (isLoggedIn) {
+      _performAddToCart(product, quantity, size);
+    } else {
+      addToast('Please sign in to add items to your cart.', 'info');
+      setPendingAction(() => () => {
+        _performAddToCart(product, quantity, size);
+      });
+       // Navigate to an intermediary protected route that will show the redirecting component
+      navigate('/login-required', { state: { from: location }, replace: true });
+    }
+  }, [isLoggedIn, _performAddToCart, setPendingAction, navigate, location, addToast]);
+
+  const clearCart = useCallback(() => {
+    setCart([]);
+  }, []);
+
+  const buyNow = useCallback((product: Product, quantity: number, size: string) => {
+    // Action for already logged-in users
+    const performBuyNowForLoggedInUser = () => {
+        clearCart();
+        _performAddToCart(product, quantity, size);
+        navigate('/checkout');
+    };
+
+    // Action for guest users after they log in (without navigation)
+    const pendingBuyNowAction = () => {
+        clearCart();
+        _performAddToCart(product, quantity, size);
+    };
+
+    if (isLoggedIn) {
+        performBuyNowForLoggedInUser();
+    } else {
+        addToast('Please sign in to buy now.', 'info');
+        setPendingAction(() => pendingBuyNowAction);
+        // Navigate to the protected checkout route.
+        // This will show the Redirecting component, then the login page.
+        // After login, the user will be redirected to '/checkout' automatically.
+        navigate('/checkout');
+    }
+}, [isLoggedIn, clearCart, _performAddToCart, navigate, setPendingAction, addToast]);
+
 
   const removeFromCart = useCallback((cartItemId: string) => {
     const itemToRemove = cart.find(item => item.cartItemId === cartItemId);
@@ -227,13 +284,9 @@ const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     }
   }, [cart, removeFromCart, addToast]);
 
-  const clearCart = useCallback(() => {
-    setCart([]);
-  }, []);
-
   const itemCount = cart.reduce((total, item) => total + item.quantity, 0);
 
-  const value = { cart, addToCart, removeFromCart, updateQuantity, clearCart, itemCount };
+  const value = { cart, addToCart, buyNow, removeFromCart, updateQuantity, clearCart, itemCount };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
@@ -257,6 +310,15 @@ const App: React.FC = () => {
                     element={
                       <ProtectedRoute>
                         <CheckoutPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                   <Route 
+                    path="/login-required" 
+                    element={
+                      <ProtectedRoute>
+                        {/* This content is never shown to unauthenticated users */}
+                        <div /> 
                       </ProtectedRoute>
                     }
                   />

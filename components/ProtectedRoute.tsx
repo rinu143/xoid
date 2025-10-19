@@ -13,7 +13,11 @@ const Redirecting: React.FC = () => {
         }, 1000);
         
         const redirectTimeout = setTimeout(() => {
-            navigate('/login', { state: { from: location }, replace: true });
+            // Prioritize `location.state.from` to handle intermediary routes.
+            // This prevents a redirect loop and ensures the user lands at their
+            // original destination after logging in.
+            const fromLocation = location.state?.from || location;
+            navigate('/login', { state: { from: fromLocation }, replace: true });
         }, 3000);
 
         return () => {
@@ -22,7 +26,16 @@ const Redirecting: React.FC = () => {
         };
     }, [navigate, location]);
     
-    const pageName = location.pathname.includes('checkout') ? 'checkout' : 'this page';
+    // Get a more descriptive page name based on the original path.
+    const getPageName = () => {
+        const path = (location.state?.from?.pathname || location.pathname).toLowerCase();
+        if (path.includes('checkout')) return 'checkout';
+        if (path.includes('account')) return 'your account';
+        return 'this page';
+    };
+
+    const pageName = getPageName();
+
 
     return (
         <div className="flex items-center justify-center min-h-[60vh] bg-white px-4 py-12">
@@ -42,12 +55,12 @@ const Redirecting: React.FC = () => {
                 
                 {/* Description */}
                 <p className="text-gray-600 mb-8">
-                    To access the {pageName}, you need to sign in to your XOID account.
+                    To access {pageName}, you need to sign in to your XOID account.
                 </p>
 
                 {/* Call to Action Button */}
                 <button
-                    onClick={() => navigate('/login', { state: { from: location }, replace: true })}
+                    onClick={() => navigate('/login', { state: { from: location.state?.from || location }, replace: true })}
                     className="w-full bg-black text-white font-bold py-3 px-6 rounded-lg hover:bg-gray-800 transition-all transform hover:scale-105 shadow-sm mb-4"
                 >
                     Sign In
