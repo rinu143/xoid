@@ -204,6 +204,26 @@ const FaqView: React.FC = () => (
 const HelpWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeView, setActiveView] = useState<View>('chat');
+  const [isFooterVisible, setIsFooterVisible] = useState(false);
+
+  useEffect(() => {
+    const footer = document.getElementById('app-footer');
+    if (!footer) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsFooterVisible(entry.isIntersecting);
+      },
+      { root: null, rootMargin: '0px', threshold: 0.1 }
+    );
+
+    observer.observe(footer);
+    return () => {
+      if (footer) {
+        observer.unobserve(footer);
+      }
+    };
+  }, []);
 
   const renderView = () => {
     switch (activeView) {
@@ -213,6 +233,8 @@ const HelpWidget: React.FC = () => {
       default: return <ChatView />;
     }
   };
+  
+  const positionClass = isFooterVisible ? '-translate-y-[90px]' : 'translate-y-0';
 
   return (
     <>
@@ -221,7 +243,7 @@ const HelpWidget: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Close help widget" : "Open help widget"}
         aria-expanded={isOpen}
-        className="fixed bottom-6 right-6 z-[80] bg-black text-white rounded-full h-14 w-14 flex items-center justify-center shadow-xl transition-all duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black"
+        className={`fixed bottom-6 right-6 z-[80] bg-black text-white rounded-full h-14 w-14 flex items-center justify-center shadow-xl transition-all duration-300 ease-in-out transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black ${positionClass}`}
       >
         <div className="relative h-7 w-7 flex items-center justify-center">
             {/* Close Icon (X) */}
@@ -238,7 +260,7 @@ const HelpWidget: React.FC = () => {
       {/* Help Drawer */}
       <div className={`fixed inset-0 bg-black bg-opacity-25 z-[70] transition-opacity duration-300 lg:hidden ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} onClick={() => setIsOpen(false)}></div>
       <div
-        className={`fixed bottom-24 right-6 z-[80] w-[calc(100vw-48px)] max-w-sm h-[70vh] max-h-[600px] bg-gray-50 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200/80 transition-all duration-300 ease-in-out origin-bottom-right ${isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'}`}
+        className={`fixed bottom-24 right-6 z-[80] w-[calc(100vw-48px)] max-w-sm h-[70vh] max-h-[600px] bg-gray-50 rounded-2xl shadow-2xl flex flex-col overflow-hidden border border-gray-200/80 transition-all duration-300 ease-in-out origin-bottom-right transform ${isOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 translate-y-4 pointer-events-none'} ${positionClass}`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="help-widget-title"
