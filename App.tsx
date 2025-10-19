@@ -15,6 +15,7 @@ import AccountPage from './pages/AccountPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import BackToTopButton from './components/BackToTopButton';
 import WishlistPage from './pages/WishlistPage';
+import HelpWidget from './components/HelpWidget';
 
 // Cart Context
 interface CartContextType {
@@ -401,6 +402,7 @@ const App: React.FC = () => {
                 </main>
                 <Footer />
                 <BackToTopButton />
+                <HelpWidget />
               </div>
             </CartProvider>
           </WishlistProvider>

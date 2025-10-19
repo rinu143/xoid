@@ -33,16 +33,17 @@ const BackToTopButton: React.FC = () => {
       onClick={scrollToTop}
       aria-label="Go to top"
       className={`
-        fixed bottom-6 right-6 z-50
+        fixed bottom-24 right-6 z-50
+        h-14 w-14 flex items-center justify-center
         bg-black text-white rounded-full
-        p-3 shadow-lg 
+        shadow-lg 
         transition-all duration-300 ease-in-out
         transform hover:scale-110 hover:bg-gray-800
         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black
         ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}
       `}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
       </svg>
     </button>
