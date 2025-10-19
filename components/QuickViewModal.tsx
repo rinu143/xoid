@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Product } from '../types';
 import { useCart, useWishlist } from '../App';
 import { Link } from 'react-router-dom';
@@ -8,7 +8,7 @@ interface QuickViewModalProps {
   onClose: () => void;
 }
 
-const StockDisplay: React.FC<{ stock: number }> = ({ stock }) => {
+const SizeStockDisplay: React.FC<{ stock: number }> = ({ stock }) => {
   if (stock === 0) {
     return <p className="text-sm font-medium text-red-600">Out of Stock</p>;
   }
@@ -28,7 +28,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
   const [error, setError] = useState<string | null>(null);
   const [addToCartState, setAddToCartState] = useState<'idle' | 'success'>('idle');
 
-
+  const sizeStock = product.sizeStock;
   const isInWishlist = isProductInWishlist(product.id);
 
   const handleAddToCart = () => {
@@ -113,9 +113,8 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
               <h2 className="text-3xl font-black tracking-tight text-black">{product.name}</h2>
             </div>
             
-            <div className="mt-4 flex items-center justify-between">
+            <div className="mt-4">
                 <p className="text-3xl text-gray-700">${product.price}</p>
-                <StockDisplay stock={product.stock} />
             </div>
             
             <div className="mt-6 border-t border-gray-200 pt-6">
@@ -137,37 +136,62 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
                 <fieldset className="mt-2">
                   <legend className="sr-only">Choose a size</legend>
                   <div className="grid grid-cols-4 gap-3">
-                    {product.sizes.map((size) => (
-                       <label
-                        key={size}
-                        className={`group relative border rounded-md py-3 px-3 flex items-center justify-center text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none cursor-pointer transition-colors ${
-                          selectedSize === size
-                            ? 'bg-black text-white border-black'
-                            : 'bg-white text-black border-gray-200'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="size-choice-modal"
-                          value={size}
-                          className="sr-only"
-                          onChange={() => {
-                            setSelectedSize(size);
-                            setError(null);
-                          }}
-                          aria-labelledby={`size-choice-modal-${size}-label`}
-                           disabled={isOutOfStock}
-                        />
-                        <span id={`size-choice-modal-${size}-label`}>{size}</span>
-                      </label>
-                    ))}
+                    {product.sizes.map((size) => {
+                       const isSizeOutOfStock = sizeStock[size] === 0;
+                       return (
+                          <label
+                            key={size}
+                            className={`group relative border rounded-md py-3 px-3 flex items-center justify-center text-sm font-medium uppercase transition-colors ${
+                              isSizeOutOfStock ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-gray-50 focus:outline-none cursor-pointer'
+                            } ${
+                              selectedSize === size
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-black border-gray-200'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="size-choice-modal"
+                              value={size}
+                              className="sr-only"
+                              onChange={() => {
+                                setSelectedSize(size);
+                                setError(null);
+                              }}
+                              aria-labelledby={`size-choice-modal-${size}-label`}
+                              disabled={isSizeOutOfStock}
+                            />
+                            <span id={`size-choice-modal-${size}-label`}>{size}</span>
+                            {isSizeOutOfStock && (
+                                <span
+                                    aria-hidden="true"
+                                    className="pointer-events-none absolute -inset-px rounded-md border-2 border-gray-200"
+                                >
+                                    <svg
+                                        className="absolute inset-0 h-full w-full stroke-2 text-gray-300"
+                                        viewBox="0 0 100 100"
+                                        preserveAspectRatio="none"
+                                        stroke="currentColor"
+                                    >
+                                        <line x1={0} y1={100} x2={100} y2={0} vectorEffect="non-scaling-stroke" />
+                                    </svg>
+                                </span>
+                            )}
+                          </label>
+                       );
+                    })}
                   </div>
                 </fieldset>
+              </div>
+              <div className="mt-2 h-5">
+                {selectedSize && sizeStock[selectedSize] !== undefined && (
+                    <SizeStockDisplay stock={sizeStock[selectedSize]} />
+                )}
               </div>
 
           </div>
 
-          <div className="mt-8">
+          <div className="mt-4">
             {!isOutOfStock && (
                 <div className="flex items-center space-x-4 mb-6">
                     <label htmlFor="quantity" className="text-sm font-medium text-black">Quantity</label>

@@ -246,9 +246,11 @@ const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     const cartItemId = `${product.id}-${size}`;
     const existingItem = cart.find(item => item.cartItemId === cartItemId);
     const currentQuantityInCart = existingItem ? existingItem.quantity : 0;
+    
+    const availableStockForSize = productInStock.sizeStock[size] ?? 0;
 
-    if (currentQuantityInCart + quantity > productInStock.stock) {
-      addToast(`Cannot add more. Only ${productInStock.stock} in stock for ${product.name}.`, 'error');
+    if (currentQuantityInCart + quantity > availableStockForSize) {
+      addToast(`Cannot add more. Only ${availableStockForSize} in stock for size ${size}.`, 'error');
       return;
     }
 
@@ -323,11 +325,13 @@ const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
     const productInStock = products.find(p => p.id === itemInCart.id);
     if (!productInStock) return;
+    
+    const availableStockForSize = productInStock.sizeStock[itemInCart.size] ?? 0;
 
-    if (quantity > productInStock.stock) {
-      addToast(`Only ${productInStock.stock} in stock for ${itemInCart.name}.`, 'error');
+    if (quantity > availableStockForSize) {
+      addToast(`Only ${availableStockForSize} in stock for size ${itemInCart.size}.`, 'error');
       setCart(prevCart =>
-        prevCart.map(item => (item.cartItemId === cartItemId ? { ...item, quantity: productInStock.stock } : item))
+        prevCart.map(item => (item.cartItemId === cartItemId ? { ...item, quantity: availableStockForSize } : item))
       );
       return;
     }

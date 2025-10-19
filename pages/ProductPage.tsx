@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Product, Review } from '../types';
 import { useCart, useWishlist } from '../App';
@@ -9,11 +9,12 @@ import SimilarProducts from '../components/SimilarProducts';
 import { useToast } from '../components/ToastProvider';
 import StarRating from '../components/StarRating';
 
+// FIX: Define props interface for ProductPage component
 interface ProductPageProps {
   products: Product[];
 }
 
-const StockDisplay: React.FC<{ stock: number }> = ({ stock }) => {
+const SizeStockDisplay: React.FC<{ stock: number }> = ({ stock }) => {
   if (stock === 0) {
     return <p className="text-sm font-bold text-red-600">Out of Stock</p>;
   }
@@ -74,6 +75,7 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
     return <div className="text-center py-20">Product not found.</div>;
   }
   
+  const sizeStock = product.sizeStock;
   const averageRating = reviews.length > 0 ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length : 0;
   const isInWishlist = isProductInWishlist(product.id);
 
@@ -210,9 +212,8 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
         <div className="mt-10 px-4 sm:px-0 lg:mt-0">
           <h1 className="text-4xl font-black tracking-tight text-black">{product.name}</h1>
 
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-4">
             <p className="text-3xl text-gray-700">${product.price}</p>
-            <StockDisplay stock={product.stock} />
           </div>
 
           <div className="mt-6">
@@ -256,36 +257,62 @@ const ProductPage: React.FC<ProductPageProps> = ({ products }) => {
                 <fieldset className="mt-4">
                   <legend className="sr-only">Choose a size</legend>
                   <div className="grid grid-cols-4 gap-4 sm:grid-cols-8 lg:grid-cols-4">
-                    {product.sizes.map((size) => (
-                      <label
-                        key={size}
-                        className={`group relative border rounded-md py-3 px-4 flex items-center justify-center text-sm font-medium uppercase hover:bg-gray-50 focus:outline-none cursor-pointer transition-colors ${
-                          selectedSize === size
-                            ? 'bg-black text-white border-black'
-                            : 'bg-white text-black border-gray-200'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="size-choice"
-                          value={size}
-                          className="sr-only"
-                          onChange={() => {
-                            setSelectedSize(size);
-                            setAddToCartError(null);
-                          }}
-                          aria-labelledby={`size-choice-${size}-label`}
-                          disabled={isOutOfStock}
-                        />
-                        <span id={`size-choice-${size}-label`}>{size}</span>
-                      </label>
-                    ))}
+                    {product.sizes.map((size) => {
+                       const isSizeOutOfStock = sizeStock[size] === 0;
+                       return (
+                          <label
+                            key={size}
+                            className={`group relative border rounded-md py-3 px-4 flex items-center justify-center text-sm font-medium uppercase transition-colors ${
+                              isSizeOutOfStock ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'hover:bg-gray-50 focus:outline-none cursor-pointer'
+                            } ${
+                              selectedSize === size
+                                ? 'bg-black text-white border-black'
+                                : 'bg-white text-black border-gray-200'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="size-choice"
+                              value={size}
+                              className="sr-only"
+                              onChange={() => {
+                                setSelectedSize(size);
+                                setAddToCartError(null);
+                              }}
+                              aria-labelledby={`size-choice-${size}-label`}
+                              disabled={isSizeOutOfStock}
+                            />
+                            <span id={`size-choice-${size}-label`}>{size}</span>
+                            {isSizeOutOfStock && (
+                                <span
+                                    aria-hidden="true"
+                                    className="pointer-events-none absolute -inset-px rounded-md border-2 border-gray-200"
+                                >
+                                    <svg
+                                        className="absolute inset-0 h-full w-full stroke-2 text-gray-300"
+                                        viewBox="0 0 100 100"
+                                        preserveAspectRatio="none"
+                                        stroke="currentColor"
+                                    >
+                                        <line x1={0} y1={100} x2={100} y2={0} vectorEffect="non-scaling-stroke" />
+                                    </svg>
+                                </span>
+                            )}
+                          </label>
+                       );
+                    })}
                   </div>
                 </fieldset>
             </div>
+            
+            <div className="mt-4 h-6">
+                {selectedSize && sizeStock[selectedSize] !== undefined && (
+                    <SizeStockDisplay stock={sizeStock[selectedSize]} />
+                )}
+            </div>
 
 
-            <div className="mt-10 space-y-4">
+            <div className="mt-6 space-y-4">
                 {addToCartError && <p className="text-sm text-center text-red-600 mb-2">{addToCartError}</p>}
                 <div className="flex gap-4">
                     <button

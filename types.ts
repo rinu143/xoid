@@ -6,7 +6,8 @@ export interface Product {
   description: string;
   color: string;
   material: string;
-  stock: number;
+  sizeStock: { [key: string]: number };
+  stock: number; // Total stock
   sizes: string[];
 }
 
