@@ -47,7 +47,8 @@ const ProductForm: React.FC<{ onSave: (product: Omit<Product, 'id'>) => void; on
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            const files = Array.from(e.target.files);
+            // FIX: Used spread syntax to convert FileList to an array, ensuring correct type inference for `URL.createObjectURL`.
+            const files = [...e.target.files];
             setImageFiles(files);
 
             const previews = files.map(file => URL.createObjectURL(file));

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../components/ToastProvider';
 import { useAuth } from '../App';
@@ -35,17 +35,114 @@ const InstagramIcon = () => (
     </svg>
 );
 
+const CheckIcon: React.FC<{ className: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+const CircleIcon: React.FC<{ className: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+);
+const WarningIcon: React.FC<{ className: string }> = ({ className }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+);
+
+interface PasswordValidationState {
+  length: boolean;
+  uppercase: boolean;
+  lowercase: boolean;
+  specialChar: boolean;
+  isPwned: boolean | null; // null when not checked
+  pwnedCount: number;
+}
+
+const PasswordStrengthIndicator: React.FC<{ validation: PasswordValidationState, isChecking: boolean }> = ({ validation, isChecking }) => {
+    const criteria = [
+        { label: 'At least 8 characters', met: validation.length },
+        { label: 'An uppercase letter (A-Z)', met: validation.uppercase },
+        { label: 'A lowercase letter (a-z)', met: validation.lowercase },
+        { label: 'A special character (!@#...)', met: validation.specialChar },
+    ];
+
+    const allCriteriaMet = criteria.every(c => c.met);
+
+    return (
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+            {criteria.map(c => (
+                 <div key={c.label} className="flex items-center">
+                    {c.met ? (
+                        <CheckIcon className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                    ) : (
+                        <CircleIcon className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                    )}
+                    <span className={c.met ? 'text-gray-800' : 'text-gray-500'}>{c.label}</span>
+                </div>
+            ))}
+            <div className={`flex items-center sm:col-span-2 pt-2 mt-2 border-t ${allCriteriaMet ? 'border-gray-200' : 'border-transparent'}`}>
+                {isChecking ? (
+                    <div className="w-4 h-4 mr-2 flex items-center justify-center flex-shrink-0">
+                        <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-gray-500"></div>
+                    </div>
+                ) : validation.isPwned === true ? (
+                    <WarningIcon className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" />
+                ) : validation.isPwned === false ? (
+                    <CheckIcon className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
+                ) : (
+                    <CircleIcon className="w-4 h-4 text-gray-400 mr-2 flex-shrink-0" />
+                )}
+                 <span className={validation.isPwned ? 'text-red-600 font-semibold' : 'text-gray-700'}>
+                    {isChecking ? 'Checking for data breaches...' : 
+                     validation.isPwned === true ? `Warning: Found in ${validation.pwnedCount.toLocaleString()} data breaches` : 
+                     validation.isPwned === false ? 'Not found in known data breaches' : 
+                     'Data breach check'}
+                </span>
+            </div>
+        </div>
+    );
+};
+
+// --- Helper Functions ---
+async function sha1(str: string): Promise<string> {
+    const buffer = new TextEncoder().encode(str);
+    const hashBuffer = await crypto.subtle.digest('SHA-1', buffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
 
 const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState('');
+  
+  // Form fields
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+
+  // Errors and state management
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+  
+  // New state for signup flow
+  const [signupStep, setSignupStep] = useState<'details' | 'otp'>('details');
+  const [generatedOtp, setGeneratedOtp] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpError, setOtpError] = useState('');
+
+  // New state for password validation
+  const [passwordValidation, setPasswordValidation] = useState<PasswordValidationState>({
+    length: false, uppercase: false, lowercase: false, specialChar: false,
+    isPwned: null, pwnedCount: 0,
+  });
+  const [isCheckingPwned, setIsCheckingPwned] = useState(false);
+  const pwnedCheckTimeout = useRef<number | null>(null);
+  
   const { addToast } = useToast();
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -73,19 +170,76 @@ const LoginPage: React.FC = () => {
     setResetEmail('');
   };
 
-  const validate = () => {
+  const validatePassword = (pass: string) => {
+    const newValidationState = {
+        length: pass.length >= 8,
+        uppercase: /[A-Z]/.test(pass),
+        lowercase: /[a-z]/.test(pass),
+        specialChar: /[!@#$%^&*(),.?":{}|<>]/.test(pass),
+        isPwned: passwordValidation.isPwned,
+        pwnedCount: passwordValidation.pwnedCount,
+    };
+    setPasswordValidation(newValidationState);
+  };
+
+  const checkPwnedPassword = useCallback(async (pass: string) => {
+    if (!pass) {
+        setPasswordValidation(prev => ({ ...prev, isPwned: null, pwnedCount: 0 }));
+        return;
+    }
+    setIsCheckingPwned(true);
+    try {
+        const hash = await sha1(pass);
+        const prefix = hash.substring(0, 5);
+        const suffix = hash.substring(5);
+        const response = await fetch(`https://api.pwnedpasswords.com/range/${prefix}`);
+        if (!response.ok) throw new Error('API request failed');
+        const text = await response.text();
+        const lines = text.split('\n');
+        const pwnedEntry = lines.find(line => line.split(':')[0] === suffix);
+
+        if (pwnedEntry) {
+            const count = parseInt(pwnedEntry.split(':')[1], 10);
+            setPasswordValidation(prev => ({ ...prev, isPwned: true, pwnedCount: count }));
+        } else {
+            setPasswordValidation(prev => ({ ...prev, isPwned: false, pwnedCount: 0 }));
+        }
+    } catch (error) {
+        console.error('Error checking pwned password:', error);
+        setPasswordValidation(prev => ({ ...prev, isPwned: null, pwnedCount: 0 }));
+    } finally {
+        setIsCheckingPwned(false);
+    }
+  }, []);
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    validatePassword(newPassword);
+    
+    if (pwnedCheckTimeout.current) clearTimeout(pwnedCheckTimeout.current);
+    pwnedCheckTimeout.current = window.setTimeout(() => {
+      checkPwnedPassword(newPassword);
+    }, 500); // Debounce API call
+  };
+
+  const validateDetails = () => {
     const newErrors: { email?: string; password?: string; name?: string } = {};
-    if (!email.trim()) {
-      newErrors.email = 'Email address is required.';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = 'Please enter a valid email address.';
+    if (!email.trim()) newErrors.email = 'Email address is required.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) newErrors.email = 'Please enter a valid email address.';
+    
+    if (!password.trim()) newErrors.password = 'Password is required.';
+    else {
+        const { length, uppercase, lowercase, specialChar, isPwned } = passwordValidation;
+        if (!length || !uppercase || !lowercase || !specialChar) {
+            newErrors.password = 'Password does not meet all strength requirements.';
+        } else if (isPwned) {
+            newErrors.password = 'This password is too common or has been exposed in a data breach. Please choose a more secure password.';
+        }
     }
-    if (!password.trim()) {
-      newErrors.password = 'Password is required.';
-    }
-    if (!isLogin && !name.trim()) {
-      newErrors.name = 'Full Name is required.';
-    }
+
+    if (!isLogin && !name.trim()) newErrors.name = 'Full Name is required.';
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -93,24 +247,45 @@ const LoginPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
-    if (validate()) {
-      if (isLogin) {
-        const success = login(email, password);
-        if (success) {
-          addToast('Signed in successfully!', 'success');
-          navigate(from, { replace: true });
-        } else {
-          setLoginError('Invalid email or password. Please try again.');
-        }
+
+    if (isLogin) {
+      // --- Login Logic ---
+      if (!email || !password) {
+        setLoginError('Please enter both email and password.');
+        return;
+      }
+      const success = login(email, password);
+      if (success) {
+        addToast('Signed in successfully!', 'success');
+        navigate(from, { replace: true });
       } else {
-        // Sign up logic (demo)
+        setLoginError('Invalid email or password. Please try again.');
+      }
+    } else {
+      // --- Sign Up Logic (Step 1: Details) ---
+      if (validateDetails()) {
+        const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
+        setGeneratedOtp(newOtp);
+        addToast(`An OTP has been sent to ${email}. (Demo OTP: ${newOtp})`, 'info');
+        setSignupStep('otp');
+      }
+    }
+  };
+
+  const handleOtpSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setOtpError('');
+    if (otp === generatedOtp) {
         addToast('Account created successfully! Please sign in.', 'success');
         setName('');
         setEmail('');
         setPassword('');
+        setOtp('');
         setErrors({});
-        setIsLogin(true); // Switch to login view after successful signup
-      }
+        setSignupStep('details');
+        setIsLogin(true);
+    } else {
+        setOtpError('Invalid OTP. Please check the code and try again.');
     }
   };
 
@@ -148,106 +323,132 @@ const LoginPage: React.FC = () => {
           {/* Right Panel: Form */}
           <div className="flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full">
-              <div className="text-left mb-10">
-                  <h2 className="text-4xl font-extrabold text-black">
-                      {isLogin ? 'Welcome Back' : 'Create Your Account'}
-                  </h2>
-                  <p className="mt-2 text-gray-600">
-                      {isLogin ? 'New to XOID?' : 'Already have an account?'}
-                      <button
-                        onClick={() => {
-                          setIsLogin(!isLogin);
-                          setErrors({});
-                          setLoginError(null);
-                        }}
-                        className="font-semibold text-black hover:underline ml-2 focus:outline-none"
-                      >
-                         {isLogin ? 'Create an account' : 'Sign in'}
-                      </button>
-                  </p>
-              </div>
-
-              <div className="space-y-4">
-                  <SocialButton icon={<GoogleIcon />} label="Continue with Google" />
-                  <SocialButton icon={<InstagramIcon />} label="Continue with Instagram" />
-              </div>
-
-              <div className="relative flex py-5 items-center">
-                  <div className="flex-grow border-t border-gray-200"></div>
-                  <span className="flex-shrink mx-4 text-xs font-medium text-gray-500 uppercase">OR</span>
-                  <div className="flex-grow border-t border-gray-200"></div>
-              </div>
-
-              <form className="space-y-6" onSubmit={handleSubmit} noValidate>
-                <div 
-                   className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
-                   style={{ maxHeight: isLogin ? 0 : nameFieldHeight }}
-                >
-                  <div className="mb-6" ref={nameFieldRef}>
-                     <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
-                     <input
-                        id="name" name="name" type="text" autoComplete="name" required
-                        className={inputClass('name')}
-                        placeholder="John Doe"
-                        value={name} onChange={handleInputChange(setName, 'name')}
-                      />
-                      {errors.name && <p className="mt-1.5 text-xs text-red-600">{errors.name}</p>}
+              {signupStep === 'otp' ? (
+                <>
+                  <div className="text-left mb-10">
+                    <h2 className="text-4xl font-extrabold text-black">Verify Your Email</h2>
+                    <p className="mt-2 text-gray-600">
+                      Enter the 6-digit code we sent to <span className="font-semibold text-black">{email}</span>.
+                    </p>
                   </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
-                  <input
-                    id="email-address" name="email" type="email" autoComplete="email" required
-                    className={inputClass('email')}
-                    placeholder="you@example.com"
-                    value={email} onChange={handleInputChange(setEmail, 'email')}
-                  />
-                  {errors.email && <p className="mt-1.5 text-xs text-red-600">{errors.email}</p>}
-                </div>
-                
-                <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
-                    <div className="relative">
+                  <form onSubmit={handleOtpSubmit} className="space-y-6">
+                    <div>
+                      <label htmlFor="otp" className="sr-only">OTP</label>
                       <input
-                        id="password" name="password" type={isPasswordVisible ? 'text' : 'password'} autoComplete="current-password" required
-                        className={`${inputClass('password')} pr-10`}
-                        placeholder="••••••••"
-                        value={password} onChange={handleInputChange(setPassword, 'password')}
+                        id="otp" name="otp" type="text" maxLength={6}
+                        value={otp} onChange={(e) => { setOtp(e.target.value); setOtpError(''); }}
+                        className="block w-full text-center tracking-[0.5em] text-lg font-semibold rounded-md border bg-gray-50/50 p-3 text-black shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-0 focus:border-black"
                       />
-                      <button type="button" className="absolute inset-y-0 right-0 flex items-center pr-3" onClick={() => setIsPasswordVisible(prev => !prev)} aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}>
-                        {isPasswordVisible ? (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-1.263-1.263a3 3 0 00-4.242 0M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542 7z" /></svg>
-                        )}
+                      {otpError && <p className="mt-2 text-sm text-center text-red-600">{otpError}</p>}
+                    </div>
+                    <div>
+                      <button type="submit" className="w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-black hover:bg-gray-800">
+                        Verify & Create Account
                       </button>
                     </div>
-                    {errors.password && <p className="mt-1.5 text-xs text-red-600">{errors.password}</p>}
-                </div>
-                
-                {isLogin && (
-                  <div className="flex items-center justify-between">
-                      <div className="flex items-center">
-                        <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 rounded border-gray-300 text-black focus:ring-0 focus:outline-none"/>
-                        <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">Remember me</label>
-                      </div>
-                      <div className="text-sm">
-                          <button type="button" onClick={() => setIsForgotPasswordModalOpen(true)} className="font-medium text-gray-600 hover:text-black hover:underline focus:outline-none">
-                              Forgot your password?
+                    <div className="text-center">
+                        <button type="button" onClick={() => setSignupStep('details')} className="text-sm font-medium text-gray-600 hover:text-black">
+                            &larr; Back to details
+                        </button>
+                    </div>
+                  </form>
+                </>
+              ) : (
+                <>
+                  <div className="text-left mb-10">
+                      <h2 className="text-4xl font-extrabold text-black">
+                          {isLogin ? 'Welcome Back' : 'Create Your Account'}
+                      </h2>
+                      <p className="mt-2 text-gray-600">
+                          {isLogin ? 'New to XOID?' : 'Already have an account?'}
+                          <button
+                            onClick={() => {
+                              setIsLogin(!isLogin);
+                              setErrors({});
+                              setLoginError(null);
+                              setSignupStep('details');
+                            }}
+                            className="font-semibold text-black hover:underline ml-2 focus:outline-none"
+                          >
+                            {isLogin ? 'Create an account' : 'Sign in'}
                           </button>
-                      </div>
+                      </p>
                   </div>
-                  )}
 
-                  {loginError && <p className="text-sm text-center text-red-600">{loginError}</p>}
-                
-                <div>
-                  <button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors">
-                    {isLogin ? 'Sign In' : 'Create Account'}
-                  </button>
-                </div>
-              </form>
+                  <div className="space-y-4">
+                      <SocialButton icon={<GoogleIcon />} label="Continue with Google" />
+                      <SocialButton icon={<InstagramIcon />} label="Continue with Instagram" />
+                  </div>
+
+                  <div className="relative flex py-5 items-center">
+                      <div className="flex-grow border-t border-gray-200"></div>
+                      <span className="flex-shrink mx-4 text-xs font-medium text-gray-500 uppercase">OR</span>
+                      <div className="flex-grow border-t border-gray-200"></div>
+                  </div>
+
+                  <form className="space-y-6" onSubmit={handleSubmit} noValidate>
+                    <div 
+                      className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
+                      style={{ maxHeight: isLogin ? 0 : nameFieldHeight }}
+                    >
+                      <div className="mb-6" ref={nameFieldRef}>
+                        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+                        <input id="name" name="name" type="text" autoComplete="name" className={inputClass('name')}
+                            placeholder="John Doe" value={name} onChange={handleInputChange(setName, 'name')} />
+                        {errors.name && <p className="mt-1.5 text-xs text-red-600">{errors.name}</p>}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+                      <input id="email-address" name="email" type="email" autoComplete="email" className={inputClass('email')}
+                        placeholder="you@example.com" value={email} onChange={handleInputChange(setEmail, 'email')} />
+                      {errors.email && <p className="mt-1.5 text-xs text-red-600">{errors.email}</p>}
+                    </div>
+                    
+                    <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                        <div className="relative">
+                          <input id="password" name="password" type={isPasswordVisible ? 'text' : 'password'} autoComplete="current-password"
+                            className={`${inputClass('password')} pr-10`} placeholder="••••••••"
+                            value={password} onChange={isLogin ? handleInputChange(setPassword, 'password') : handlePasswordChange} />
+                          <button type="button" className="absolute inset-y-0 right-0 flex items-center pr-3" onClick={() => setIsPasswordVisible(prev => !prev)} aria-label={isPasswordVisible ? 'Hide password' : 'Show password'}>
+                            {isPasswordVisible ? (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-1.263-1.263a3 3 0 00-4.242 0M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                            ) : (
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542 7z" /></svg>
+                            )}
+                          </button>
+                        </div>
+                        {errors.password && <p className="mt-1.5 text-xs text-red-600">{errors.password}</p>}
+                    </div>
+
+                    {!isLogin && <PasswordStrengthIndicator validation={passwordValidation} isChecking={isCheckingPwned} />}
+                    
+                    {isLogin && (
+                      <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <input id="remember-me" name="remember-me" type="checkbox" className="h-4 w-4 rounded border-gray-300 text-black focus:ring-0 focus:outline-none"/>
+                            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">Remember me</label>
+                          </div>
+                          <div className="text-sm">
+                              <button type="button" onClick={() => setIsForgotPasswordModalOpen(true)} className="font-medium text-gray-600 hover:text-black hover:underline focus:outline-none">
+                                  Forgot your password?
+                              </button>
+                          </div>
+                      </div>
+                      )}
+
+                      {loginError && <p className="text-sm text-center text-red-600">{loginError}</p>}
+                    
+                    <div>
+                      <button type="submit" className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-bold rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black transition-colors">
+                        {isLogin ? 'Sign In' : 'Create Account'}
+                      </button>
+                    </div>
+                  </form>
+                </>
+              )}
             </div>
           </div>
         </div>
