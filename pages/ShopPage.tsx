@@ -33,10 +33,10 @@ const ShopPage: React.FC = () => {
   const availableColors = useMemo(() => Array.from(new Set(products.flatMap(p => p.colors))), [products]);
   const availableSizes = useMemo(() => {
     const allSizes = products.flatMap(p => p.sizes);
-    // FIX: Replaced `Array.from(new Set())` with spread syntax to correctly infer the type as `string[]` instead of `unknown[]`.
     const uniqueSizes = [...new Set(allSizes)];
     const sortOrder = ['S', 'M', 'L', 'XL'];
-    uniqueSizes.sort((a, b) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
+    // FIX: Explicitly typed sort parameters `a` and `b` as strings because they were being inferred as 'unknown'.
+    uniqueSizes.sort((a: string, b: string) => sortOrder.indexOf(a) - sortOrder.indexOf(b));
     return uniqueSizes;
   }, [products]);
 

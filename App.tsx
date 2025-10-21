@@ -19,6 +19,7 @@ import WishlistPage from './pages/WishlistPage';
 import HelpWidget from './components/HelpWidget';
 import AdminPage from './pages/admin/AdminPage';
 import VirtualTryOnPage from './pages/VirtualTryOnPage';
+import CompanyInfoPage from './pages/CompanyInfoPage';
 
 // Product Context
 interface ProductContextType {
@@ -443,6 +444,7 @@ const App: React.FC = () => {
                       />
                       <Route path="/virtual-try-on" element={<VirtualTryOnPage />} />
                       <Route path="/virtual-try-on/:id" element={<VirtualTryOnPage />} />
+                      <Route path="/info" element={<CompanyInfoPage />} />
                       <Route
                         path="/admin/*"
                         element={
