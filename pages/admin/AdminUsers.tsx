@@ -23,7 +23,7 @@ const AdminUsers: React.FC = () => {
                 <h2 className="text-xl font-bold text-black">User Management</h2>
                 <p className="text-sm text-gray-500 mt-1">View users and manage their roles.</p>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto horizontal-scrollbar">
                 <table className="min-w-full text-sm text-left">
                     <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
                         <tr>

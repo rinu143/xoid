@@ -89,6 +89,7 @@ const CheckoutPage: React.FC = () => {
   
   const hasAddresses = user && user.addresses.length > 0;
 
+  const [isMobileSummaryExpanded, setIsMobileSummaryExpanded] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [saveAddress, setSaveAddress] = useState(true);
   const [formState, setFormState] = useState({
@@ -161,10 +162,90 @@ const CheckoutPage: React.FC = () => {
   if (cart.length === 0) {
     return null;
   }
+
+  const OrderSummaryContent = () => (
+     <>
+        <ul role="list" className="divide-y divide-gray-200">
+            {cart.map((product) => (
+                <li key={product.cartItemId} className="flex py-6">
+                <div className="flex-shrink-0 w-24 h-32 border border-gray-200 rounded-md overflow-hidden">
+                    <img
+                    src={product.imageUrls[0]}
+                    alt={product.name}
+                    className="w-full h-full object-center object-cover"
+                    />
+                </div>
+                <div className="ml-4 flex-1 flex flex-col">
+                    <div>
+                    <div className="flex justify-between text-base font-medium text-black">
+                        <h3>{product.name}</h3>
+                        <p className="ml-4">${(product.price * product.quantity).toFixed(2)}</p>
+                    </div>
+                    <p className="mt-1 text-sm text-gray-500">Size: {product.size}</p>
+                    </div>
+                    <div className="flex-1 flex items-end justify-between text-sm">
+                    <p className="text-gray-500">Qty {product.quantity}</p>
+                    <div className="flex">
+                        <button 
+                            type="button" 
+                            onClick={() => removeFromCart(product.cartItemId)}
+                            className="font-medium text-black hover:underline"
+                        >
+                            Remove
+                        </button>
+                    </div>
+                    </div>
+                </div>
+                </li>
+            ))}
+        </ul>
+        <dl className="space-y-4 border-t border-gray-200 pt-6">
+            <div className="flex items-center justify-between">
+                <dt className="text-sm text-gray-600">Subtotal</dt>
+                <dd className="text-sm font-medium text-black">${subtotal.toFixed(2)}</dd>
+            </div>
+            <div className="flex items-center justify-between">
+                <dt className="text-sm text-gray-600">Shipping</dt>
+                <dd className="text-sm font-medium text-black">${shippingCost.toFixed(2)}</dd>
+            </div>
+            <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
+                <dt className="text-base font-medium text-black">Order total</dt>
+                <dd className="text-base font-medium text-black">${total.toFixed(2)}</dd>
+            </div>
+        </dl>
+     </>
+  );
   
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <h1 className="text-3xl font-extrabold text-black sm:text-4xl mb-8 lg:mb-12">Checkout</h1>
+       {/* Mobile Order Summary */}
+        <div className="lg:hidden bg-gray-50 border border-gray-200/80 rounded-lg mb-8">
+            <button
+                onClick={() => setIsMobileSummaryExpanded(!isMobileSummaryExpanded)}
+                className="w-full flex justify-between items-center p-4"
+                aria-expanded={isMobileSummaryExpanded}
+            >
+                <span className="flex items-center gap-2 text-black font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                    <span>{isMobileSummaryExpanded ? 'Hide' : 'Show'} order summary</span>
+                     <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-gray-500 transition-transform duration-300 ${isMobileSummaryExpanded ? 'transform rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                </span>
+                <span className="text-lg font-bold text-black">${total.toFixed(2)}</span>
+            </button>
+            <div className={`transition-all duration-500 ease-in-out grid ${isMobileSummaryExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                <div className="overflow-hidden">
+                    <div className="p-4 border-t border-gray-200/80">
+                       <OrderSummaryContent />
+                    </div>
+                </div>
+            </div>
+        </div>
+
       <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start">
         <main className="lg:col-span-7">
           <form onSubmit={handleSubmit} className="space-y-10">
@@ -281,57 +362,12 @@ const CheckoutPage: React.FC = () => {
           </form>
         </main>
 
-        <aside className="mt-16 lg:mt-0 lg:col-span-5">
+        <aside className="mt-16 lg:mt-0 lg:col-span-5 hidden lg:block">
            <div className="bg-gray-50 rounded-lg p-6 lg:sticky lg:top-24">
               <h2 className="text-lg font-medium text-black">Order summary</h2>
-              <ul role="list" className="mt-6 divide-y divide-gray-200">
-                {cart.map((product) => (
-                  <li key={product.cartItemId} className="flex py-6">
-                    <div className="flex-shrink-0 w-24 h-32 border border-gray-200 rounded-md overflow-hidden">
-                      <img
-                        src={product.imageUrls[0]}
-                        alt={product.name}
-                        className="w-full h-full object-center object-cover"
-                      />
-                    </div>
-                    <div className="ml-4 flex-1 flex flex-col">
-                      <div>
-                        <div className="flex justify-between text-base font-medium text-black">
-                          <h3>{product.name}</h3>
-                          <p className="ml-4">${(product.price * product.quantity).toFixed(2)}</p>
-                        </div>
-                        <p className="mt-1 text-sm text-gray-500">Size: {product.size}</p>
-                      </div>
-                      <div className="flex-1 flex items-end justify-between text-sm">
-                        <p className="text-gray-500">Qty {product.quantity}</p>
-                        <div className="flex">
-                           <button 
-                              type="button" 
-                              onClick={() => removeFromCart(product.cartItemId)}
-                              className="font-medium text-black hover:underline"
-                            >
-                             Remove
-                           </button>
-                        </div>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-              <dl className="mt-6 space-y-4 border-t border-gray-200 pt-6">
-                <div className="flex items-center justify-between">
-                  <dt className="text-sm text-gray-600">Subtotal</dt>
-                  <dd className="text-sm font-medium text-black">${subtotal.toFixed(2)}</dd>
-                </div>
-                <div className="flex items-center justify-between">
-                  <dt className="text-sm text-gray-600">Shipping</dt>
-                  <dd className="text-sm font-medium text-black">${shippingCost.toFixed(2)}</dd>
-                </div>
-                <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
-                  <dt className="text-base font-medium text-black">Order total</dt>
-                  <dd className="text-base font-medium text-black">${total.toFixed(2)}</dd>
-                </div>
-              </dl>
+              <div className="mt-6">
+                <OrderSummaryContent />
+              </div>
            </div>
         </aside>
       </div>

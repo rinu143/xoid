@@ -95,12 +95,16 @@ const Toast: React.FC<ToastProps> = ({ toast, onClose }) => {
 
     const styles = toastStyles[toast.type];
 
+    const animationClasses = isVisible
+        ? 'opacity-100 translate-x-0 translate-y-0'
+        : 'opacity-0 -translate-y-full sm:translate-y-0 sm:translate-x-full';
+
     return (
         <div
             className={`
-                w-96 bg-white shadow-2xl rounded-lg pointer-events-auto flex
+                w-full max-w-sm sm:w-96 bg-white shadow-2xl rounded-lg pointer-events-auto flex
                 transform transition-all duration-300 ease-in-out
-                ${isVisible ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'}
+                ${animationClasses}
             `}
         >
             {/* Color bar */}
@@ -152,9 +156,9 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
             {/* Toast Container */}
             <div
                 aria-live="assertive"
-                className="fixed inset-0 pointer-events-none flex items-end justify-end p-4 sm:p-6 z-[100]"
+                className="fixed inset-0 pointer-events-none flex items-start sm:items-end justify-center sm:justify-end p-4 sm:p-6 z-[100]"
             >
-                <div className="flex flex-col items-end space-y-4">
+                <div className="flex flex-col items-center sm:items-end space-y-4 w-full sm:w-auto">
                     {toasts.map((toast) => (
                        <Toast key={toast.id} toast={toast} onClose={removeToast} />
                     ))}

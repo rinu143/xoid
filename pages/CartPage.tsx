@@ -33,8 +33,8 @@ const CartPage: React.FC = () => {
             </h2>
 
             <ul role="list" className="border-t border-b border-gray-200 divide-y divide-gray-200">
-              {cart.map((product, productIdx) => (
-                <li key={product.cartItemId} className="flex py-6 sm:py-10">
+              {cart.map((product) => (
+                <li key={product.cartItemId} className="relative flex py-6 sm:py-8">
                   <div className="flex-shrink-0">
                     <img
                       src={product.imageUrls[0]}
@@ -43,57 +43,51 @@ const CartPage: React.FC = () => {
                     />
                   </div>
 
-                  <div className="ml-4 flex-1 flex flex-col justify-between sm:ml-6">
-                    <div className="relative pr-9 sm:grid sm:grid-cols-2 sm:gap-x-6 sm:pr-0">
-                      <div>
-                        <div className="flex justify-between">
-                          <h3 className="text-base">
-                            <Link to={`/product/${product.id}`} className="font-bold text-black hover:text-gray-800">
-                              {product.name}
-                            </Link>
-                          </h3>
-                        </div>
-                        <div className="mt-1 flex text-sm">
-                          {/* FIX: Changed product.color to product.colors[0] to correctly display the first color from the array. */}
-                          <p className="text-gray-500">{product.colors[0]}</p>
-                           {product.size && (
-                            <p className="ml-4 pl-4 border-l border-gray-200 text-gray-500">Size: {product.size}</p>
-                          )}
-                        </div>
-                        <p className="mt-1 text-sm font-medium text-gray-900">${product.price.toFixed(2)}</p>
-                      </div>
-
-                      <div className="mt-4 sm:mt-0 sm:pr-9">
-                        <div className="flex items-center border border-gray-300 rounded-md w-fit">
-                           <button
-                             type="button"
-                             onClick={() => updateQuantity(product.cartItemId, product.quantity - 1)}
-                             className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-l-md disabled:opacity-50 disabled:cursor-not-allowed"
-                             aria-label="Decrease quantity"
-                             disabled={product.quantity <= 1}
-                           >
-                             &ndash;
-                           </button>
-                           <span className="px-4 py-1.5 text-black font-medium text-sm" aria-live="polite">{product.quantity}</span>
-                           <button
-                             type="button"
-                             onClick={() => updateQuantity(product.cartItemId, product.quantity + 1)}
-                             className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-r-md"
-                             aria-label="Increase quantity"
-                           >
-                             +
-                           </button>
-                        </div>
-
-                        <div className="absolute top-0 right-0">
-                          <button type="button" onClick={() => removeFromCart(product.cartItemId)} className="-m-2 p-2 inline-flex text-gray-400 hover:text-gray-500">
+                  <div className="ml-4 flex-1 flex flex-col sm:ml-6">
+                    <div>
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-base sm:text-lg">
+                          <Link to={`/product/${product.id}`} className="font-bold text-black hover:text-gray-800">
+                            {product.name}
+                          </Link>
+                        </h3>
+                         <button type="button" onClick={() => removeFromCart(product.cartItemId)} className="p-1 -mt-1 -mr-1 text-gray-400 hover:text-gray-600">
                             <span className="sr-only">Remove</span>
-                             <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                            <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                             </svg>
-                          </button>
-                        </div>
+                            </svg>
+                        </button>
                       </div>
+                      <div className="mt-1 flex text-sm">
+                        <p className="text-gray-500">{product.colors[0]}</p>
+                        {product.size && (
+                          <p className="ml-4 pl-4 border-l border-gray-200 text-gray-500">Size: {product.size}</p>
+                        )}
+                      </div>
+                       <p className="mt-2 text-sm font-medium text-gray-600">${product.price.toFixed(2)}</p>
+                    </div>
+                    <div className="flex-1 flex items-end justify-between text-sm mt-4">
+                        <div className="flex items-center border border-gray-300 rounded-md w-fit">
+                            <button
+                                type="button"
+                                onClick={() => updateQuantity(product.cartItemId, product.quantity - 1)}
+                                className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-l-md disabled:opacity-50 disabled:cursor-not-allowed"
+                                aria-label="Decrease quantity"
+                                disabled={product.quantity <= 1}
+                            >
+                                &ndash;
+                            </button>
+                            <span className="px-4 py-1.5 text-black font-medium text-sm" aria-live="polite">{product.quantity}</span>
+                            <button
+                                type="button"
+                                onClick={() => updateQuantity(product.cartItemId, product.quantity + 1)}
+                                className="px-3 py-1.5 text-gray-600 hover:bg-gray-100 rounded-r-md"
+                                aria-label="Increase quantity"
+                            >
+                                +
+                            </button>
+                        </div>
+                       <p className="ml-4 text-base font-bold text-black">${(product.price * product.quantity).toFixed(2)}</p>
                     </div>
                   </div>
                 </li>

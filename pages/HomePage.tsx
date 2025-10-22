@@ -20,7 +20,7 @@ const HomePage: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent z-10"></div>
 
         {/* Content */}
-        <div className="relative z-20 p-8 md:p-16 w-full max-w-4xl text-left">
+        <div className="relative z-20 p-6 md:p-12 lg:p-16 w-full max-w-4xl text-left">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white uppercase tracking-widest leading-tight">
             Don't impress, Express
           </h1>

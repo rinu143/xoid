@@ -212,7 +212,7 @@ const AdminProducts: React.FC = () => {
                         </button>
                     </div>
                 </div>
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto horizontal-scrollbar">
                     <table className="min-w-full text-sm text-left">
                         <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
                             <tr>

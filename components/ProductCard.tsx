@@ -27,7 +27,7 @@ const WishlistButton: React.FC<{ product: Product }> = ({ product }) => {
     return (
         <button
             onClick={handleWishlistToggle}
-            className={`absolute top-4 right-4 z-20 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out transform active:scale-95 ${isInWishlist ? 'scale-100 text-red-500' : 'scale-0 group-hover:scale-100 text-black hover:text-red-500'}`}
+            className={`absolute top-4 right-4 z-20 h-10 w-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm transition-all duration-300 ease-in-out transform active:scale-95 md:opacity-0 group-hover:opacity-100 ${isInWishlist ? 'text-red-500' : 'text-black hover:text-red-500'}`}
             aria-label={isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
         >
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill={isInWishlist ? 'currentColor' : 'none'} viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -79,7 +79,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickViewClick }) 
         
         {/* Hover Effect Container */}
         {onQuickViewClick && !isOutOfStock && (
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 flex items-end justify-center p-4">
+          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity duration-300 hidden md:flex items-end justify-center p-4">
             {/* Quick View Button */}
             <button
               onClick={handleButtonClick}

@@ -66,7 +66,33 @@ const AdminPage: React.FC = () => {
                 <h1 className="text-4xl font-black text-black">Admin Panel</h1>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-x-12 lg:gap-y-8 items-start">
-                <aside className="lg:col-span-3 lg:sticky lg:top-28">
+                <div className="lg:hidden p-4 bg-white border border-gray-200/80 rounded-xl mb-8">
+                     {/* Mobile Admin Profile Header */}
+                    <div className="flex items-center gap-4 border-b border-gray-200/80 pb-4 mb-4">
+                        <div className="h-12 w-12 rounded-full bg-black text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
+                            {getUserInitials(user.name)}
+                        </div>
+                        <div>
+                            <p className="font-bold text-black truncate">{user.name}</p>
+                            <p className="text-sm text-gray-500 truncate">{user.email}</p>
+                        </div>
+                    </div>
+                    {/* Mobile Navigation */}
+                    <div className="relative">
+                        <select
+                            value={activeView}
+                            onChange={(e) => setActiveView(e.target.value as AdminView)}
+                            className="w-full appearance-none rounded-md border border-gray-300 bg-white py-3 pl-4 pr-10 text-base font-medium text-black transition-colors duration-200 hover:border-gray-400 focus:border-black focus:outline-none focus:ring-0"
+                        >
+                            {navItems.map(item => <option key={item.id} value={item.id}>{item.label}</option>)}
+                        </select>
+                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-gray-500">
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                        </div>
+                    </div>
+                </div>
+
+                <aside className="hidden lg:block lg:col-span-3 lg:sticky lg:top-28">
                     <div className="p-4 bg-white border border-gray-200/80 rounded-xl">
                         {/* Admin Profile Header */}
                         <div className="flex items-center gap-4 border-b border-gray-200/80 pb-4 mb-4">

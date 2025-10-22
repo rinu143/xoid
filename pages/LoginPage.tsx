@@ -1,7 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useToast } from '../components/ToastProvider';
 import { useAuth } from '../App';
+
+const loginImages = [
+    'https://saberandsacrifice.com/cdn/shop/files/DSC01373_4124x2749_crop_center.jpg?v=1757669574',
+    'https://saberandsacrifice.com/cdn/shop/files/230316E4-3528-4A0B-87D3-0A3FF8DAF663_1310x_crop_center.jpg?v=1754823242',
+    'https://saberandsacrifice.com/cdn/shop/files/DSC07796_b3ef0d9d-f6fe-4e83-8556-d7d7608e37b0_1310x_crop_center.jpg?v=1723279071',
+    'https://hinlers.com/cdn/shop/files/CCAB8C39-8F2C-4523-893D-DD2095606D2E.jpg?v=1757515785',
+];
+
 
 const SocialButton: React.FC<{ icon: React.ReactNode; label: string }> = ({ icon, label }) => (
   <button
@@ -150,6 +158,7 @@ const LoginPage: React.FC = () => {
   
   const nameFieldRef = useRef<HTMLDivElement>(null);
   const [nameFieldHeight, setNameFieldHeight] = useState(0);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const from = location.state?.from?.pathname || '/account';
 
@@ -158,6 +167,13 @@ const LoginPage: React.FC = () => {
       setNameFieldHeight(nameFieldRef.current.scrollHeight);
     }
   }, [isLogin]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+        setCurrentImageIndex(prevIndex => (prevIndex + 1) % loginImages.length);
+    }, 5000); // Change image every 5 seconds
+    return () => clearInterval(timer);
+  }, []);
 
   const handlePasswordReset = (e: React.FormEvent) => {
     e.preventDefault();
@@ -305,23 +321,36 @@ const LoginPage: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-white">
-        <div className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
-          {/* Left Panel: Image */}
-          <div className="hidden lg:block relative">
-             <div 
-               className="absolute inset-0 bg-cover bg-center"
-               style={{ backgroundImage: "url('https://saberandsacrifice.com/cdn/shop/files/DSC01373_4124x2749_crop_center.jpg?v=1757669574')"}}
-             ></div>
-             <div className="absolute inset-0 bg-black/30"></div>
-             <div className="relative z-10 flex flex-col justify-end h-full p-16 text-white">
-               <h1 className="text-6xl font-black tracking-widest uppercase">XOID</h1>
-               <p className="mt-4 text-xl text-white/80 max-w-md">The intersection of comfort and high fashion.</p>
+      <div className="h-full bg-white">
+        <div className="grid grid-cols-1 lg:grid-cols-2 h-full">
+          {/* Left Panel: Image Carousel */}
+          <div className="hidden lg:block relative overflow-hidden">
+             {loginImages.map((src, index) => (
+                <div
+                    key={src}
+                    className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${index === currentImageIndex ? 'opacity-100' : 'opacity-0'} ${index % 2 === 0 ? 'animate-kenburns-top-right' : 'animate-kenburns-bottom-left'}`}
+                    style={{ backgroundImage: `url('${src}')` }}
+                />
+            ))}
+             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent"></div>
+             <div className="relative z-10 flex flex-col justify-center items-center h-full p-16 text-white text-center">
+               <h1 className="text-8xl font-black tracking-widest uppercase">XOID</h1>
+               <p className="mt-4 text-2xl text-white/80 max-w-md">The intersection of comfort and high fashion.</p>
              </div>
           </div>
 
           {/* Right Panel: Form */}
-          <div className="flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col justify-center items-center py-12 px-4 sm:px-6 lg:px-8 relative">
+            <Link 
+                to="/" 
+                className="absolute top-8 left-4 sm:left-6 lg:left-8 flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-black transition-colors group"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
+                </svg>
+                Back to Home
+            </Link>
+
             <div className="max-w-md w-full">
               {signupStep === 'otp' ? (
                 <>

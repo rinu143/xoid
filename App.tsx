@@ -393,6 +393,81 @@ const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children
     return <>{children}</>;
 };
 
+const AppLayout: React.FC = () => {
+  const location = useLocation();
+  const isLoginPage = location.pathname === '/login';
+
+  const rootDivClass = isLoginPage
+    ? "h-screen bg-white text-gray-800"
+    : "flex flex-col min-h-screen bg-white text-gray-800";
+
+  const mainClassName = isLoginPage
+    ? "h-full"
+    : "flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8";
+
+  return (
+    <div className={rootDivClass}>
+      {!isLoginPage && <Header />}
+      <main className={mainClassName}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/shop" element={<ShopPage />} />
+          <Route path="/product/:id" element={<ProductPage />} />
+          <Route path="/cart" element={<CartPage />} />
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <CheckoutPage />
+              </ProtectedRoute>
+            }
+          />
+           <Route
+            path="/login-required"
+            element={
+              <ProtectedRoute>
+                <div />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/account"
+            element={
+              <ProtectedRoute>
+                <AccountPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/wishlist"
+            element={
+              <ProtectedRoute>
+                <WishlistPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/virtual-try-on" element={<VirtualTryOnPage />} />
+          <Route path="/virtual-try-on/:id" element={<VirtualTryOnPage />} />
+          <Route path="/info" element={<CompanyInfoPage />} />
+          <Route
+            path="/admin/*"
+            element={
+              <AdminProtectedRoute>
+                <AdminPage />
+              </AdminProtectedRoute>
+            }
+          />
+        </Routes>
+      </main>
+      {!isLoginPage && <Footer />}
+      {!isLoginPage && <BackToTopButton />}
+      {!isLoginPage && <HelpWidget />}
+    </div>
+  );
+};
+
+
 const App: React.FC = () => {
   return (
     <ToastProvider>
@@ -401,64 +476,7 @@ const App: React.FC = () => {
           <ProductProvider>
             <WishlistProvider>
               <CartProvider>
-                <div className="flex flex-col min-h-screen bg-white text-gray-800">
-                  <Header />
-                  <main className="flex-grow container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                    <Routes>
-                      <Route path="/" element={<HomePage />} />
-                      <Route path="/shop" element={<ShopPage />} />
-                      <Route path="/product/:id" element={<ProductPage />} />
-                      <Route path="/cart" element={<CartPage />} />
-                      <Route 
-                        path="/checkout"
-                        element={
-                          <ProtectedRoute>
-                            <CheckoutPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                       <Route 
-                        path="/login-required" 
-                        element={
-                          <ProtectedRoute>
-                            <div /> 
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route path="/login" element={<LoginPage />} />
-                      <Route 
-                        path="/account" 
-                        element={
-                          <ProtectedRoute>
-                            <AccountPage />
-                          </ProtectedRoute>
-                        } 
-                      />
-                      <Route
-                        path="/wishlist"
-                        element={
-                          <ProtectedRoute>
-                            <WishlistPage />
-                          </ProtectedRoute>
-                        }
-                      />
-                      <Route path="/virtual-try-on" element={<VirtualTryOnPage />} />
-                      <Route path="/virtual-try-on/:id" element={<VirtualTryOnPage />} />
-                      <Route path="/info" element={<CompanyInfoPage />} />
-                      <Route
-                        path="/admin/*"
-                        element={
-                          <AdminProtectedRoute>
-                            <AdminPage />
-                          </AdminProtectedRoute>
-                        }
-                      />
-                    </Routes>
-                  </main>
-                  <Footer />
-                  <BackToTopButton />
-                  <HelpWidget />
-                </div>
+                <AppLayout />
               </CartProvider>
             </WishlistProvider>
           </ProductProvider>
