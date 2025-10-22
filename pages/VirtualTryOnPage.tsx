@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Product } from '../types';
@@ -27,7 +28,7 @@ const ProductSelectionCard: React.FC<{ product: Product; onSelect: () => void; }
     </div>
     <div className="mt-4 text-center">
       <h3 className="text-sm text-black font-semibold">{product.name}</h3>
-      <p className="text-sm text-gray-500">${product.price}</p>
+      <p className="text-sm text-gray-500">₹{product.price}</p>
     </div>
   </div>
 );

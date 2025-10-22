@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { Product } from '../types';
 import { useCart, useWishlist } from '../App';
@@ -121,7 +122,7 @@ const QuickViewModal: React.FC<QuickViewModalProps> = ({ product, onClose }) => 
             </div>
             
             <div className="mt-4">
-                <p className="text-3xl text-gray-700">${product.price}</p>
+                <p className="text-3xl text-gray-700">₹{product.price}</p>
             </div>
             
             <div className="mt-6 border-t border-gray-200 pt-6">

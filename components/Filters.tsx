@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { FiltersState } from '../pages/ShopPage';
 
@@ -20,9 +21,9 @@ const colorMap: { [key: string]: string } = {
 
 const priceRanges = [
   { label: 'All', value: '' },
-  { label: '$100 - $120', value: '100-120' },
-  { label: '$120 - $140', value: '120-140' },
-  { label: '$140+', value: '140-9999' },
+  { label: '₹8000 - ₹10000', value: '8000-10000' },
+  { label: '₹10000 - ₹12000', value: '10000-12000' },
+  { label: '₹12000+', value: '12000-99999' },
 ];
 
 const FilterSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (

@@ -1,3 +1,4 @@
+
 // data/websiteContent.ts
 
 // This content is aggregated from various parts of the application
@@ -7,7 +8,7 @@ const productContent = `
 ## AVAILABLE PRODUCTS ##
 
 Product Name: Void Echo Tee
-Price: $120
+Price: ₹8999
 Description: Crafted from ultra-soft, heavyweight cotton, the Void Echo Tee features a subtle, tone-on-tone embroidered logo. Its relaxed, oversized silhouette drapes perfectly for a modern, minimalist statement.
 Colors: Cream
 Material: Heavyweight Cotton
@@ -15,7 +16,7 @@ Sizes: S, M, L, XL
 Keywords: minimalist, embroidered, heavyweight, essential
 
 Product Name: Chrome Fragment Tee
-Price: $155
+Price: ₹12999
 Description: The Chrome Fragment Tee showcases a shattered metallic graphic print on a pristine white base. Made with 280gsm Portuguese cotton for a structured yet comfortable feel.
 Colors: White
 Material: Portuguese Cotton
@@ -23,7 +24,7 @@ Sizes: S, M, L, XL (Currently Out of Stock)
 Keywords: graphic, metallic, statement, portuguese cotton
 
 Product Name: Noir Canvas Tee
-Price: $110
+Price: ₹7999
 Description: The quintessential oversized black tee. The Noir Canvas is your go-to for understated luxury. Its premium fabric and flawless construction speak for themselves.
 Colors: Black
 Material: Premium Cotton
@@ -31,7 +32,7 @@ Sizes: S, M, L, XL
 Keywords: essential, basic, minimalist, black tee
 
 Product Name: Ivory Script Tee
-Price: $135
+Price: ₹9999
 Description: An off-white tee featuring the "XOID" brand name in an elegant, flowing script across the back. The front is kept clean for a balanced, sophisticated look.
 Colors: Light Blue
 Material: Organic Cotton

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useProducts } from '../../App';
 import { useToast } from '../../components/ToastProvider';
@@ -233,7 +234,7 @@ const AdminProducts: React.FC = () => {
                                                 <span className="font-semibold text-black">{product.name}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-gray-800 whitespace-nowrap">${product.price.toFixed(2)}</td>
+                                        <td className="px-6 py-4 text-gray-800 whitespace-nowrap">₹{product.price.toFixed(2)}</td>
                                         <td className="px-6 py-4 text-gray-800 whitespace-nowrap">{product.stock}</td>
                                         <td className="px-6 py-4 text-gray-800 whitespace-nowrap">{product.colors.join(', ')}</td>
                                         <td className="px-6 py-4 text-right whitespace-nowrap space-x-4">

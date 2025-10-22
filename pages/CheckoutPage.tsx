@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../App';
@@ -179,7 +180,7 @@ const CheckoutPage: React.FC = () => {
                     <div>
                     <div className="flex justify-between text-base font-medium text-black">
                         <h3>{product.name}</h3>
-                        <p className="ml-4">${(product.price * product.quantity).toFixed(2)}</p>
+                        <p className="ml-4">₹{(product.price * product.quantity).toFixed(2)}</p>
                     </div>
                     <p className="mt-1 text-sm text-gray-500">Size: {product.size}</p>
                     </div>
@@ -202,15 +203,15 @@ const CheckoutPage: React.FC = () => {
         <dl className="space-y-4 border-t border-gray-200 pt-6">
             <div className="flex items-center justify-between">
                 <dt className="text-sm text-gray-600">Subtotal</dt>
-                <dd className="text-sm font-medium text-black">${subtotal.toFixed(2)}</dd>
+                <dd className="text-sm font-medium text-black">₹{subtotal.toFixed(2)}</dd>
             </div>
             <div className="flex items-center justify-between">
                 <dt className="text-sm text-gray-600">Shipping</dt>
-                <dd className="text-sm font-medium text-black">${shippingCost.toFixed(2)}</dd>
+                <dd className="text-sm font-medium text-black">₹{shippingCost.toFixed(2)}</dd>
             </div>
             <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
                 <dt className="text-base font-medium text-black">Order total</dt>
-                <dd className="text-base font-medium text-black">${total.toFixed(2)}</dd>
+                <dd className="text-base font-medium text-black">₹{total.toFixed(2)}</dd>
             </div>
         </dl>
      </>
@@ -235,7 +236,7 @@ const CheckoutPage: React.FC = () => {
                         <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                 </span>
-                <span className="text-lg font-bold text-black">${total.toFixed(2)}</span>
+                <span className="text-lg font-bold text-black">₹{total.toFixed(2)}</span>
             </button>
             <div className={`transition-all duration-500 ease-in-out grid ${isMobileSummaryExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
                 <div className="overflow-hidden">

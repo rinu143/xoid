@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../App';
@@ -55,7 +56,7 @@ const Redirecting: React.FC = () => {
                 
                 {/* Description */}
                 <p className="text-gray-600 mb-8">
-                    To access {pageName}, you need to sign in to your XOID account.
+                    To access {pageName}, you need to sign in to your ZOID account.
                 </p>
 
                 {/* Call to Action Button */}

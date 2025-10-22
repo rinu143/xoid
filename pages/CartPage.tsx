@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../App';
@@ -64,7 +65,7 @@ const CartPage: React.FC = () => {
                           <p className="ml-4 pl-4 border-l border-gray-200 text-gray-500">Size: {product.size}</p>
                         )}
                       </div>
-                       <p className="mt-2 text-sm font-medium text-gray-600">${product.price.toFixed(2)}</p>
+                       <p className="mt-2 text-sm font-medium text-gray-600">₹{product.price.toFixed(2)}</p>
                     </div>
                     <div className="flex-1 flex items-end justify-between text-sm mt-4">
                         <div className="flex items-center border border-gray-300 rounded-md w-fit">
@@ -87,7 +88,7 @@ const CartPage: React.FC = () => {
                                 +
                             </button>
                         </div>
-                       <p className="ml-4 text-base font-bold text-black">${(product.price * product.quantity).toFixed(2)}</p>
+                       <p className="ml-4 text-base font-bold text-black">₹{(product.price * product.quantity).toFixed(2)}</p>
                     </div>
                   </div>
                 </li>
@@ -107,7 +108,7 @@ const CartPage: React.FC = () => {
             <dl className="mt-6 space-y-4">
               <div className="flex items-center justify-between">
                 <dt className="text-sm text-gray-600">Subtotal</dt>
-                <dd className="text-sm font-medium text-black">${subtotal.toFixed(2)}</dd>
+                <dd className="text-sm font-medium text-black">₹{subtotal.toFixed(2)}</dd>
               </div>
               <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
                 <dt className="text-sm text-gray-600">Shipping</dt>
@@ -115,7 +116,7 @@ const CartPage: React.FC = () => {
               </div>
               <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
                 <dt className="text-base font-medium text-black">Order total</dt>
-                <dd className="text-base font-medium text-black">${subtotal.toFixed(2)}</dd>
+                <dd className="text-base font-medium text-black">₹{subtotal.toFixed(2)}</dd>
               </div>
             </dl>
 

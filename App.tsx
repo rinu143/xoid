@@ -1,4 +1,5 @@
-import React, { useState, createContext, useContext, useCallback } from 'react';
+
+import React, { useState, createContext, useContext, useCallback, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useParams, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { CartItem, Product, Address, User } from './types';
 import { productsData } from './data/products';
@@ -395,7 +396,13 @@ const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children
 
 const AppLayout: React.FC = () => {
   const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
   const isLoginPage = location.pathname === '/login';
+  const isProductPage = location.pathname.startsWith('/product/');
 
   const rootDivClass = isLoginPage
     ? "h-screen bg-white text-gray-800"
@@ -461,8 +468,12 @@ const AppLayout: React.FC = () => {
         </Routes>
       </main>
       {!isLoginPage && <Footer />}
-      {!isLoginPage && <BackToTopButton />}
-      {!isLoginPage && <HelpWidget />}
+      {!isLoginPage && (
+        <div className={isProductPage ? 'hidden lg:block' : ''}>
+            <BackToTopButton />
+            <HelpWidget />
+        </div>
+      )}
     </div>
   );
 };

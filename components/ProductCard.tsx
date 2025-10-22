@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types';
@@ -103,7 +104,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onQuickViewClick }) 
             </div>
           )}
         </div>
-        <p className="text-sm font-semibold text-black">${product.price}</p>
+        <p className="text-sm font-semibold text-black">₹{product.price}</p>
       </div>
     </Link>
   );

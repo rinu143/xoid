@@ -145,7 +145,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                                             </div>
                                             <div className="mt-4">
                                                 <h3 className="text-base text-black font-semibold truncate">{product.name}</h3>
-                                                <p className="text-sm text-gray-500 mt-1">${product.price}</p>
+                                                <p className="text-sm text-gray-500 mt-1">₹{product.price}</p>
                                             </div>
                                         </Link>
                                     ))}
@@ -193,7 +193,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                                                     </div>
                                                     <div className="mt-4">
                                                         <h3 className="text-base text-black font-semibold truncate">{product.name}</h3>
-                                                        <p className="text-sm text-gray-500 mt-1">${product.price}</p>
+                                                        <p className="text-sm text-gray-500 mt-1">₹{product.price}</p>
                                                     </div>
                                                 </Link>
                                             ))}
@@ -234,7 +234,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                                             </div>
                                             <div className="mt-4">
                                                 <h3 className="text-base text-black font-semibold truncate">{product.name}</h3>
-                                                <p className="text-sm text-gray-500 mt-1">${product.price}</p>
+                                                <p className="text-sm text-gray-500 mt-1">₹{product.price}</p>
                                             </div>
                                         </Link>
                                     ))}
@@ -248,42 +248,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
     );
 };
 
-// --- Mega Menu Component for Desktop Navigation ---
-const MegaMenu: React.FC<{ products: Product[]; onClose: () => void }> = ({ products, onClose }) => {
-    const featuredProducts = useMemo(() => products.slice(0, 2), [products]);
-
-    return (
-        <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="space-y-4">
-                <h3 className="text-sm font-bold text-gray-500 tracking-widest uppercase">Shop by Category</h3>
-                <ul className="space-y-3">
-                    <li><Link to="/shop" onClick={onClose} className="font-semibold text-black hover:underline">All Products</Link></li>
-                    <li><Link to="/shop" onClick={onClose} className="font-semibold text-black hover:underline">New Arrivals</Link></li>
-                    <li><Link to="/shop" onClick={onClose} className="font-semibold text-black hover:underline">Best Sellers</Link></li>
-                </ul>
-            </div>
-            <div className="md:col-span-2">
-                <h3 className="text-sm font-bold text-gray-500 tracking-widest uppercase mb-4">Featured</h3>
-                <div className="grid grid-cols-2 gap-6">
-                    {featuredProducts.map(product => (
-                        <Link key={product.id} to={`/product/${product.id}`} onClick={onClose} className="group block">
-                            <div className="relative overflow-hidden aspect-[3/4] bg-gray-100 rounded-md">
-                                <img src={product.imageUrls[0]} alt={product.name} className="absolute inset-0 w-full h-full object-cover object-center transition-transform duration-500 ease-in-out group-hover:scale-105" />
-                            </div>
-                            <div className="mt-3">
-                                <h3 className="text-sm text-black font-semibold">{product.name}</h3>
-                                <p className="text-sm text-gray-500 mt-1">${product.price}</p>
-                            </div>
-                        </Link>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
-};
-
-
-const NavItem: React.FC<{ to: string; children: React.ReactNode; onClick?: () => void; isMobile?: boolean; forceActive?: boolean; }> = ({ to, children, onClick, isMobile = false, forceActive = false }) => {
+const NavItem: React.FC<{ to: string; children: React.ReactNode; onClick?: (e: React.MouseEvent) => void; isMobile?: boolean; forceActive?: boolean; }> = ({ to, children, onClick, isMobile = false, forceActive = false }) => {
   if (isMobile) {
     return (
       <NavLink
@@ -419,10 +384,8 @@ const Header: React.FC = () => {
   const { itemCount } = useCart();
   const { isLoggedIn, user, isAdmin } = useAuth();
   const { wishlist } = useWishlist();
-  const { products } = useProducts();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-  const [isShopMenuOpen, setIsShopMenuOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -453,13 +416,7 @@ const Header: React.FC = () => {
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
                 <NavItem to="/">Home</NavItem>
-                <div 
-                    className="flex items-center h-20"
-                    onMouseEnter={() => setIsShopMenuOpen(true)}
-                    onMouseLeave={() => setIsShopMenuOpen(false)}
-                >
-                    <NavItem to="/shop" forceActive={isShopActive || isShopMenuOpen}>Shop</NavItem>
-                </div>
+                <NavItem to="/shop" forceActive={isShopActive}>Shop</NavItem>
                 <NavLink 
                   to="/virtual-try-on" 
                   className={({ isActive }) => 
@@ -530,19 +487,6 @@ const Header: React.FC = () => {
             </div>
           </div>
         </nav>
-        {/* Mega Menu */}
-        <div 
-            onMouseEnter={() => setIsShopMenuOpen(true)}
-            onMouseLeave={() => setIsShopMenuOpen(false)}
-            className={`
-                absolute top-full left-0 right-0 w-full z-40 transition-all duration-300 ease-in-out
-                ${isShopMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible -translate-y-2'}
-            `}
-        >
-           <div className="bg-white/80 backdrop-blur-md shadow-2xl border-t border-gray-200/50">
-               <MegaMenu products={products} onClose={() => setIsShopMenuOpen(false)} />
-            </div>
-        </div>
       </header>
       <MobileNav isOpen={isMobileNavOpen} onClose={() => setIsMobileNavOpen(false)} isAdmin={isAdmin} isLoggedIn={isLoggedIn} />
       {isSearchOpen && <SearchModal onClose={() => setIsSearchOpen(false)} />}

@@ -1,3 +1,5 @@
+
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { Product, Review } from '../types';
@@ -55,7 +57,6 @@ const ProductPage: React.FC = () => {
     setActiveTab('details'); // Reset tab on product change
     setSelectedSize(null);
     setAddToCartError(null);
-    window.scrollTo(0, 0); // Scroll to top on product change
   }, [product]);
 
   const handleNextImage = useCallback(() => {
@@ -218,7 +219,7 @@ const ProductPage: React.FC = () => {
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-black">{product.name}</h1>
 
           <div className="mt-4">
-            <p className="text-3xl text-gray-700">${product.price}</p>
+            <p className="text-3xl text-gray-700">₹{product.price}</p>
           </div>
 
           <div className="mt-6">
@@ -385,7 +386,7 @@ const ProductPage: React.FC = () => {
             <div className="flex items-center justify-center sm:justify-start space-x-4 mt-2">
                 {/* WhatsApp Button */}
                 <a 
-                    href={`https://api.whatsapp.com/send?text=Check%20out%20this%20XOID%20tee%3A%20${encodeURIComponent(product.name)}%20-%20${encodeURIComponent(window.location.href)}`} 
+                    href={`https://api.whatsapp.com/send?text=Check%20out%20this%20ZOID%20tee%3A%20${encodeURIComponent(product.name)}%20-%20${encodeURIComponent(window.location.href)}`} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-gray-500 hover:text-black transition-colors"

@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 import { useProducts, useAuth } from '../../App';
 import { mockOrders } from '../../data/orders';
@@ -95,7 +96,7 @@ const AdminDashboard: React.FC = () => {
         // Sales Data
         const salesByMonth: { [key: string]: number } = mockOrders.reduce((acc, order) => {
             const month = new Date(order.date).toLocaleString('default', { month: 'short' });
-            const value = parseFloat(order.total.replace('$', ''));
+            const value = parseFloat(order.total.replace('₹', '').replace(/,/g, ''));
             acc[month] = (acc[month] || 0) + value;
             return acc;
         }, {} as { [key: string]: number });
@@ -135,8 +136,8 @@ const AdminDashboard: React.FC = () => {
             .sort((a, b) => a.stock - b.stock);
 
         // Recalculate stats here for consistency
-        const totalSales = mockOrders.reduce((acc, order) => acc + parseFloat(order.total.replace('$', '')), 0)
-            .toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+        const totalSales = '₹' + mockOrders.reduce((acc, order) => acc + parseFloat(order.total.replace('₹', '').replace(/,/g, '')), 0)
+            .toLocaleString('en-IN');
         const totalOrders = mockOrders.length;
         
         return { salesData, trafficData, bestSellers, lowStockProducts, totalSales, totalOrders };
@@ -174,7 +175,7 @@ const AdminDashboard: React.FC = () => {
             {/* Analytics Dashboards */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                  <AnalyticsCard title="Sales Performance">
-                    <BarChart data={salesData} yLabel="$" />
+                    <BarChart data={salesData} yLabel="₹" />
                 </AnalyticsCard>
                 <AnalyticsCard title="Website Traffic (Last 7 Days)">
                     <BarChart data={trafficData} />
