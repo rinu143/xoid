@@ -1,4 +1,5 @@
 
+
 import React, { useState, createContext, useContext, useCallback, useEffect } from 'react';
 import { HashRouter, Routes, Route, Link, useParams, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { CartItem, Product, Address, User } from './types';
@@ -21,6 +22,7 @@ import HelpWidget from './components/HelpWidget';
 import AdminPage from './pages/admin/AdminPage';
 import VirtualTryOnPage from './pages/VirtualTryOnPage';
 import CompanyInfoPage from './pages/CompanyInfoPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Product Context
 interface ProductContextType {
@@ -465,6 +467,7 @@ const AppLayout: React.FC = () => {
               </AdminProtectedRoute>
             }
           />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
       {!isLoginPage && <Footer />}
